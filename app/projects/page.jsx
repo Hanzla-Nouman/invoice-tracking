@@ -25,7 +25,7 @@ export default function Projects() {
       });
   }, []);
 
-  if (loading) return <p className="text-center text-gray-500 mt-10">Loading projects...</p>;
+  if (loading) return <p className="text-center text-gray-500 mt-14">Loading projects...</p>;
   if (error) return <p className="text-center text-red-500">{error}</p>;
 
   return (

@@ -6,9 +6,7 @@ export async function PUT(req, { params }) {
   try {
     await dbConnect();
     const { id } = params;
-    const updatedFields = await req.json(); // Get all fields from frontend
-
-    console.log("Received Update Request:", { id, updatedFields });
+    const updatedFields = await req.json();
 
     if (!id) {
       return new Response(JSON.stringify({ error: "Missing timesheet ID" }), {
@@ -17,22 +15,21 @@ export async function PUT(req, { params }) {
       });
     }
 
-    // ✅ Update all edited fields
+    // ✅ Update timesheet
     const updatedTimesheet = await Timesheet.findByIdAndUpdate(
       id,
-      { $set: updatedFields }, // ✅ Update multiple fields dynamically
+      { $set: updatedFields },
       { new: true, runValidators: true }
-    );
+    )
+      .populate("consultant", "name email") // ✅ Populate consultant details
+      .populate("project", "name"); // ✅ Populate project details
 
     if (!updatedTimesheet) {
-      console.log("Timesheet Not Found in DB");
       return new Response(JSON.stringify({ error: "Timesheet not found" }), {
         status: 404,
         headers: { "Content-Type": "application/json" },
       });
     }
-
-    console.log("Timesheet Updated Successfully:", updatedTimesheet);
 
     return new Response(JSON.stringify({ timesheet: updatedTimesheet }), {
       status: 200,
@@ -46,6 +43,7 @@ export async function PUT(req, { params }) {
     });
   }
 }
+
 
 
 

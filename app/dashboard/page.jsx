@@ -14,7 +14,7 @@ export default function Dashboard() {
     }
   }, [status, router]);
 
-  if (status === "loading") return <p className="text-center mt-10 ">Loading...</p>;
+  if (status === "loading") return <p className="text-center mt-14 ">Loading...</p>;
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center">

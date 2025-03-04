@@ -43,7 +43,7 @@ const Sidebar = () => {
          </li>
 
       {session?.user && 
-         <li onClick={()=>{router.push('/')}} className="cursor-pointer">
+         <li onClick={()=>{router.push('/timesheet')}} className="cursor-pointer">
             <span className="flex items-center p-2 text-gray-900 rounded-lg  hover:bg-gray-100  group">
             <FaRegCalendarAlt size={20}/>
                <span className="flex-1 ms-3 whitespace-nowrap">Timesheet</span>

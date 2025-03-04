@@ -1,6 +1,7 @@
 import dbConnect from "@/lib/db";
 import Timesheet from "@/models/timesheet";
 import User from "@/models/user";
+import Project from "@/models/project";
 import mongoose from "mongoose";
 import { NextResponse } from "next/server";
 
