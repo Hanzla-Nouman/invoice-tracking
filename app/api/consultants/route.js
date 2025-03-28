@@ -10,8 +10,7 @@ export async function GET() {
     
     // ✅ Ensure we fetch email and createdAt fields
     const consultants = await User.find({ role: "Consultant" }).select("name _id email createdAt");
-    
-    console.log("Fetched Consultants:", consultants); // ✅ Debugging
+
 
     return NextResponse.json(consultants, { status: 200 });
 
@@ -27,7 +26,7 @@ export async function POST(req) {
     await dbConnect();
     const { name, email, password } = await req.json();
 
-    console.log("Received Consultant Data:", { name, email });
+ 
 
     if (!name || !email || !password) {
       return NextResponse.json({ message: "All fields are required" }, { status: 400 });

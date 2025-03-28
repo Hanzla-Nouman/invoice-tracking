@@ -8,7 +8,6 @@ export async function POST(req) {
     await dbConnect();
     const { name, description, startDate, endDate, assignedConsultants } = await req.json();
 
-    console.log("Received Project Data:", { name, startDate, endDate, assignedConsultants });
 
     if (!name) {
       return NextResponse.json({ message: "Project name is required" }, { status: 400 });
@@ -57,7 +56,6 @@ export async function GET(req) {
       projects = await Project.find().select("name description startDate endDate assignedConsultants");
     }
 
-    console.log("Fetched Projects:", projects);
 
     return NextResponse.json(projects, { status: 200 });
 

@@ -18,8 +18,6 @@ export default function AddProject() {
   useEffect(() => {
     fetch("/api/consultants")
       .then((res) => {
-        console.log("Response Status:", res.status);
-        console.log("Response Headers:", res.headers.get("content-type"));
   
         if (!res.ok) {
           throw new Error(`HTTP error! Status: ${res.status}`);
@@ -28,7 +26,7 @@ export default function AddProject() {
         return res.json();
       })
       .then((data) => {
-        console.log("API Response:", data);
+   
         setConsultants(data);
       })
       .catch((error) => {
@@ -48,7 +46,6 @@ export default function AddProject() {
     });
 
     const data = await res.json();
-    console.log("API Response:", data);
 
     if (res.ok) {
       setMessage("Project added successfully!");

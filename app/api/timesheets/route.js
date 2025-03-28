@@ -10,7 +10,6 @@ export async function POST(req) {
     await dbConnect();
     const { consultant, consultantEmail, project, workType, workQuantity, notes } = await req.json();
 
-    console.log("Received Data:", { consultant, project, workType, workQuantity });
 
     if (!consultant) {
       return NextResponse.json({ message: "Consultant ID is required" }, { status: 400 });
@@ -27,7 +26,6 @@ export async function POST(req) {
       return NextResponse.json({ message: "Invalid Project ID" }, { status: 400 });
     }
 
-    console.log("Valid Project ID:", projectObjectId);
 
     const newTimesheet = new Timesheet({
       consultant,
@@ -73,7 +71,6 @@ export async function GET(req) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 403 });
     }
 
-    console.log(`Fetched Timesheets for ${userRole}:`, timesheets);
     return NextResponse.json(timesheets, { status: 200 });
 
   } catch (error) {

@@ -16,7 +16,6 @@ export default function Login() {
     const res = await signIn("credentials", {
       email: credentials.email,
       password: credentials.password,
-    //   role: credentials.role,
       redirect: false,
     });
 

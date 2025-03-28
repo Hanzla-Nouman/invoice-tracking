@@ -14,7 +14,6 @@ export default function Projects() {
         return res.json();
       })
       .then((data) => {
-        console.log("Projects Fetched:", data);
         setProjects(data);
         setLoading(false);
       })

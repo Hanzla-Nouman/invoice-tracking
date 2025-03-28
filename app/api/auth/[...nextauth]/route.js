@@ -20,7 +20,6 @@ export const authOptions = {
         await dbConnect();
         const user = await User.findOne({ email: credentials.email });
 
-        console.log("=========== User Found: ======", user);
 
         if (!user) throw new Error("User not found!");
 
@@ -33,19 +32,18 @@ export const authOptions = {
   ],
   callbacks: {
     async jwt({ token, user }) {
-      console.log("JWT Callback - User:", user);
+     
       if (user) {
         token.id = user.id; // ✅ Ensure ID is stored in token
         token.role = user.role;
       }
-      console.log("JWT Token After Processing:", token);
+ 
       return token;
     },
     async session({ session, token }) {
-      console.log("Session Callback - Token:", token);
+
       session.user.id = token.id; // ✅ Ensure ID is passed to session
       session.user.role = token.role;
-      console.log("Session Data (Backend):", session);
       return session;
     },
   },

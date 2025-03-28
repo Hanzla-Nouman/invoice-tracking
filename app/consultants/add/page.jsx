@@ -17,7 +17,6 @@ export default function AddConsultant() {
     });
 
     const data = await res.json();
-    console.log("API Response:", data);
 
     if (res.ok) {
       setMessage("Consultant added successfully!");

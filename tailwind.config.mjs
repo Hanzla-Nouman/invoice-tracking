@@ -11,6 +11,11 @@ export default {
         background: "var(--background)",
         foreground: "var(--foreground)",
       },
+      transitionProperty: {
+        'height': 'height',
+        'max-height': 'max-height',
+      },
+
     },
   },
   plugins: [],

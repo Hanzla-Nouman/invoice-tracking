@@ -14,7 +14,6 @@ export default function Consultants() {
         return res.json();
       })
       .then((data) => {
-        console.log("Consultants Fetched:", data);
         setConsultants(data);
         setLoading(false);
       })
@@ -30,7 +29,7 @@ export default function Consultants() {
 
   return (
     <div className="max-w-4xl mx-auto mt-10 p-4 bg-white shadow-lg rounded-lg">
-      <h1 className="text-2xl font-bold mb-4 text-center">Consultants List</h1>
+      <h1 className="text-2xl font-bold mb-4 ">Consultants List</h1>
       <table className="w-full border-collapse border border-gray-300">
         <thead>
           <tr className="bg-gray-200">
@@ -39,12 +38,12 @@ export default function Consultants() {
             <th className="border border-gray-300 p-2">Added On</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody className="">
           {consultants.map((consultant) => (
-            <tr key={consultant._id} className="border border-gray-300 text-center">
-              <td className="p-2">{consultant.name}</td>
-              <td className="p-2">{consultant.email}</td>
-              <td className="p-2">{new Date(consultant.createdAt).toLocaleDateString()}</td>
+            <tr key={consultant._id} className="border  hover:bg-gray-200 hover:cursor-pointer border-gray-500 ">
+              <td className="p-2 border">{consultant.name}</td>
+              <td className="p-2 border text-blue-700 font-semibold">{consultant.email}</td>
+              <td className="p-2 border">{new Date(consultant.createdAt).toLocaleDateString()}</td>
             </tr>
           ))}
         </tbody>

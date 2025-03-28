@@ -1,44 +1,3 @@
-// import { signOut, useSession } from 'next-auth/react'
-// import { useRouter } from 'next/navigation';
-// import React, { useEffect } from 'react'
-
-// const NavBar = () => {
-//     const { data: session, status } = useSession();
-//     const router = useRouter();
-//     // useEffect(() => {
-//     //   if (status === "unauthenticated") {
-//     //     router.push("/login");
-//     //   }
-//     // }, [status, router]);
-//   return (
-//     <nav className="bg-white fixed w-full z-20 top-0 start-0 border-gray-200">
-//     <div className="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-3">
-//       <a href="https://flowbite.com/" className="flex items-center space-x-3">
-//         <span className="self-center text-2xl font-semibold whitespace-nowrap">Invoicing</span>
-//       </a>
-
-//       <div className="flex items-center md:order-2 space-x-3">
-//         <button
-//           type="button"
-//           className="flex text-sm bg-gray-800 rounded-full focus:ring-4 focus:ring-gray-300"
-//           aria-expanded="false"
-//         >
-//           <span className="sr-only">Open user menu</span>
-         
-//         </button>
-
-//         {/* Menu Toggle Button */}
-    
-//     <span>{session?.user?.name}</span>
-//     <span><b>{session?.user?.role}</b></span>
-//       </div>
-  
-//     </div>
-//   </nav>
-//   )
-// }
-
-// export default NavBar
 "use client";
 import { signOut, useSession } from 'next-auth/react'
 import { usePathname, useRouter } from 'next/navigation';
@@ -50,18 +9,17 @@ export default function Navbar() {
   const pathname = usePathname();
       const { data: session, status } = useSession();
     const router = useRouter();
-    // useEffect(() => {
-    //   if (status === "unauthenticated") {
-    //     router.push("/login");
-    //   }
-    // }, [status, router]);
+    useEffect(() => {
+      if (status === "unauthenticated") {
+        router.push("/login");
+      }
+    }, [status, router]);
 
   return (
-    <nav className="bg-white fixed top-0 left-0 w-screen z-50 border-gray-200 dar:bg-gray-900">
+    <nav className="bg-gray-900 shadow-lg fixed top-0 left-0 w-screen z-50 border-gray-200 dar:bg-gray-900">
       <div className="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-3 px-4">
         <a href="https://flowbite.com/" className="flex items-center space-x-3 rtl:space-x-reverse">
-          <img src="https://flowbite.com/docs/images/logo.svg" className="h-8" alt="Flowbite Logo" />
-          <span className="self-center text-2xl font-semibold whitespace-nowrap dar:text-white">Arcthane</span>
+          <span className="self-center  text-2xl font-bold whitespace-nowrap  text-white">BMS</span>
         </a>
 
         <div className="flex items-center md:order-2 space-x-3 md:space-x-0 rtl:space-x-reverse">
@@ -90,11 +48,11 @@ export default function Navbar() {
           >
             <span className="sr-only">Open user menu</span>
             {/* <img className="w-8 h-8 rounded-full" src="/docs/images/people/profile-picture-3.jpg" alt="user photo" /> */}
-            <span className="w-8 h-8 rounded-full"  ></span>
+            <span className="w-8 h-8 rounded-full bg-gray-200"  ></span>
           </button>
 }
 
-          {/* Dropdown Menu */}
+
           {isDropdownOpen && (
             <div className="absolute top-8 right-8 w-48 bg-white divide-y divide-gray-100 rounded-lg shadow-lg dar:bg-gray-700 dar:divide-gray-600">
               <div className="px-4 py-3">
