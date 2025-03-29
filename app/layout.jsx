@@ -16,9 +16,9 @@ const gruppo = Gruppo({
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${gruppo.variable}`}>
-      <body className="font-sans bg-white">
+      <body className="font-sans bg-gray-100">
         <SessionProvider>
-          <Toaster position="top-right" />
+          <Toaster position="top-center" />
           <div>
             <NavBar />
           </div>

@@ -1,6 +1,8 @@
 "use client";
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
+import { Loader } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export default function ExpensePage() {
   const [form, setForm] = useState({
@@ -10,39 +12,51 @@ export default function ExpensePage() {
     paymentMethod: "Credit Card",
     date: "",
   });
-
+  const router = useRouter();
   const [expenses, setExpenses] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [expensesLoading, setExpensesLoading] = useState(true);
+  const [showAll, setShowAll] = useState(false);
 
   useEffect(() => {
     fetch("/api/expense")
       .then((res) => res.json())
-      .then((data) => setExpenses(data.expenses));
+      .then((data) => {
+        setExpenses(data.expenses);
+        setExpensesLoading(false);
+      });
   }, []);
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+
     const response = await fetch("/api/expense", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(form),
     });
 
+    setLoading(false);
     if (response.ok) {
       toast.success("Expense Added!");
+      router.push("/");
       setForm({ title: "", amount: "", currency: "USD", paymentMethod: "Credit Card", date: "" });
 
-      // Fetch updated expenses list from the backend
+      setExpensesLoading(true);
       const res = await fetch("/api/expense");
       const updatedExpenses = await res.json();
-      setExpenses(updatedExpenses.expenses); // Update state with latest data
+      setExpenses(updatedExpenses.expenses);
+      setExpensesLoading(false);
+    } else {
+      toast.error("Failed to add expense. Try again.");
     }
   };
 
   return (
     <div className="container mx-auto mt-10 p-6">
-      {/* Centered Form */}
       <div className="flex justify-center items-center">
         <div className="bg-white p-6 max-w-lg w-full shadow-lg rounded-lg border">
           <h1 className="text-2xl font-bold mb-4 text-black text-center">Add Expense</h1>
@@ -55,13 +69,14 @@ export default function ExpensePage() {
                 type="text"
                 value={form.title}
                 onChange={handleChange}
+                placeholder="e.g., Office Rent"
                 className="w-full border p-2 rounded mt-1"
                 required
+                disabled={loading}
               />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* Amount */}
               <div>
                 <label className="block font-medium">Amount:</label>
                 <input
@@ -69,12 +84,13 @@ export default function ExpensePage() {
                   type="number"
                   value={form.amount}
                   onChange={handleChange}
+                  placeholder="e.g., 500"
                   className="w-full border p-2 rounded mt-1"
                   required
+                  disabled={loading}
                 />
               </div>
 
-              {/* Date */}
               <div>
                 <label className="block font-medium">Date:</label>
                 <input
@@ -84,10 +100,10 @@ export default function ExpensePage() {
                   onChange={handleChange}
                   className="w-full border p-2 rounded mt-1"
                   required
+                  disabled={loading}
                 />
               </div>
 
-              {/* Payment Method */}
               <div>
                 <label className="block font-medium">Payment Method:</label>
                 <select
@@ -95,6 +111,7 @@ export default function ExpensePage() {
                   value={form.paymentMethod}
                   onChange={handleChange}
                   className="w-full border p-2 rounded mt-1"
+                  disabled={loading}
                 >
                   <option value="Credit Card">Credit Card</option>
                   <option value="Cash">Cash</option>
@@ -103,7 +120,6 @@ export default function ExpensePage() {
                 </select>
               </div>
 
-              {/* Currency */}
               <div>
                 <label className="block font-medium">Currency:</label>
                 <select
@@ -111,6 +127,7 @@ export default function ExpensePage() {
                   value={form.currency}
                   onChange={handleChange}
                   className="w-full border p-2 rounded mt-1"
+                  disabled={loading}
                 >
                   <option value="USD">USD</option>
                   <option value="EUR">EUR</option>
@@ -120,21 +137,45 @@ export default function ExpensePage() {
               </div>
             </div>
 
-            <button type="submit" className="w-full mt-4 bg-blue-600 text-white p-2 rounded-lg">
-              Add Expense
+            <button type="submit" className="w-full mt-4 bg-blue-600 text-white p-2 rounded-lg flex items-center justify-center" disabled={loading}>
+              {loading ? (
+                <>
+                  <Loader className="animate-spin h-5 w-5 mr-2" /> Adding...
+                </>
+              ) : (
+                "Add Expense"
+              )}
             </button>
           </form>
         </div>
       </div>
 
       <h2 className="text-xl font-bold mt-6">Recent Expenses</h2>
-      <ul className="bg-white p-4 rounded-lg shadow mt-4">
-        {expenses?.map((expense) => (
-          <li key={expense._id} className="border-b p-2">
-            {expense.title} - ${expense.amount} ({expense.currency}) [{expense.paymentMethod}]
-          </li>
-        ))}
-      </ul>
+      {expensesLoading ? (
+        <div className="text-center py-4">
+          <Loader className="animate-spin h-6 w-6 mx-auto" />
+        </div>
+      ) : (
+        <div className="bg-white p-4 rounded-lg shadow mt-4">
+          {expenses.slice(0, showAll ? expenses.length : 10).map((expense) => (
+            <div key={expense._id} className="border-b p-3 flex justify-between items-center">
+              <div>
+                <p className="font-semibold">{expense.title}</p>
+                <p className="text-gray-600">{expense.paymentMethod} | {expense.currency} {expense.amount}</p>
+              </div>
+              <span className="text-sm text-gray-500">{new Date(expense.date).toLocaleDateString()}</span>
+            </div>
+          ))}
+          {expenses.length > 10 && (
+            <button
+              className="mt-4 text-blue-600 underline w-full text-center"
+              onClick={() => setShowAll(!showAll)}
+            >
+              {showAll ? "Show Less" : "Show All"}
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }

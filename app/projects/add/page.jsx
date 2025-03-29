@@ -1,6 +1,9 @@
 "use client";
 
+import { Loader } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
+import toast from "react-hot-toast";
 
 export default function AddProject() {
   const [form, setForm] = useState({
@@ -8,36 +11,37 @@ export default function AddProject() {
     description: "",
     startDate: "",
     endDate: "",
-    assignedConsultants: [],
+    assignedConsultant: "",
   });
 
   const [consultants, setConsultants] = useState([]);
   const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [consultantsLoading, setConsultantsLoading] = useState(true);
+const router = useRouter();
 
-  // Fetch consultants from the backend
   useEffect(() => {
     fetch("/api/consultants")
       .then((res) => {
-  
         if (!res.ok) {
           throw new Error(`HTTP error! Status: ${res.status}`);
         }
-  
         return res.json();
       })
       .then((data) => {
-   
         setConsultants(data);
+        setConsultantsLoading(false);
       })
       .catch((error) => {
         console.error("Error fetching consultants:", error);
+        setConsultantsLoading(false);
       });
   }, []);
-  
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMessage("");
+    setLoading(true);
 
     const res = await fetch("/api/projects", {
       method: "POST",
@@ -46,12 +50,14 @@ export default function AddProject() {
     });
 
     const data = await res.json();
+    setLoading(false);
 
     if (res.ok) {
-      setMessage("Project added successfully!");
-      setForm({ name: "", description: "", startDate: "", endDate: "", assignedConsultants: [] });
+      router.push("/projects")
+      toast.success("Project added successfully!");
+      setForm({ name: "", description: "", startDate: "", endDate: "", assignedConsultant: "" });
     } else {
-      setMessage(data.message || "Failed to add project.");
+      toast.success("Failed to add project.");
     }
   };
 
@@ -68,6 +74,7 @@ export default function AddProject() {
           onChange={(e) => setForm({ ...form, name: e.target.value })}
           className="w-full border p-2 rounded mt-1"
           required
+          disabled={loading}
         />
 
         <label className="block font-medium mt-2">Description:</label>
@@ -75,36 +82,42 @@ export default function AddProject() {
           value={form.description}
           onChange={(e) => setForm({ ...form, description: e.target.value })}
           className="w-full border p-2 rounded mt-1"
+          disabled={loading}
         />
-<div className="flex justify-between">
-<div className="flex-col flex">
-        <label className="block font-medium mt-2">Start Date:</label>
-        <input
-          type="date"
-          value={form.startDate}
-          onChange={(e) => setForm({ ...form, startDate: e.target.value })}
-          className="w-full border p-2 rounded mt-1"
-        />
+
+        <div className="grid grid-cols-2 gap-4 mt-2">
+          <div>
+            <label className="block font-medium">Start Date:</label>
+            <input
+              type="date"
+              value={form.startDate}
+              onChange={(e) => setForm({ ...form, startDate: e.target.value })}
+              className="w-full border p-2 rounded mt-1"
+              disabled={loading}
+            />
+          </div>
+          <div>
+            <label className="block font-medium">End Date:</label>
+            <input
+              type="date"
+              value={form.endDate}
+              onChange={(e) => setForm({ ...form, endDate: e.target.value })}
+              className="w-full border p-2 rounded mt-1"
+              disabled={loading}
+            />
+          </div>
         </div>
-<div className="flex-col flex">
-        <label className="block font-medium mt-2">End Date:</label>
-        <input
-          type="date"
-          value={form.endDate}
-          onChange={(e) => setForm({ ...form, endDate: e.target.value })}
-          className="w-full border p-2 rounded mt-1"
-        />
-        </div>
-</div>
-        <label className="block font-medium mt-2">Assign Consultants:</label>
+
+        <label className="block font-medium mt-2">Assign Consultant:</label>
         <select
-          multiple
-          value={form.assignedConsultants}
-          onChange={(e) =>
-            setForm({ ...form, assignedConsultants: [...e.target.selectedOptions].map((o) => o.value) })
-          }
+          value={form.assignedConsultant}
+          onChange={(e) => setForm({ ...form, assignedConsultant: e.target.value })}
           className="w-full border p-2 rounded mt-1"
+          disabled={loading || consultantsLoading}
         >
+          <option value="" disabled>
+            {consultantsLoading ? "Loading consultants..." : "Select a consultant"}
+          </option>
           {consultants.map((consultant) => (
             <option key={consultant._id} value={consultant._id}>
               {consultant.name}
@@ -112,8 +125,18 @@ export default function AddProject() {
           ))}
         </select>
 
-        <button type="submit" className="w-full mt-4 bg-blue-500 text-white p-2 rounded-lg">
-          Add Project
+        <button
+          type="submit"
+          className="w-full mt-4 bg-blue-500 text-white p-2 rounded-lg flex justify-center items-center"
+          disabled={loading}
+        >
+          {loading ? (
+            <>
+              <Loader className="animate-spin h-5 w-5 mr-2" />
+            </>
+          ) : (
+            "Add Project"
+          )}
         </button>
       </form>
     </div>

@@ -28,19 +28,26 @@ export default function Projects() {
   if (error) return <p className="text-center text-red-500">{error}</p>;
 
   return (
-    <div className="max-w-4xl mx-auto mt-10 p-4 bg-white shadow-lg rounded-lg">
-      <h1 className="text-2xl font-bold mb-4 text-center">All Projects</h1>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <div className="max-w-6xl mx-auto mt-10 p-6">
+      <h1 className="text-3xl font-bold mb-6 text-center text-gray-800"> My Projects</h1>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {projects.map((project) => (
-          <div key={project._id} className="border p-4 rounded-lg shadow-md">
-            <h2 className="text-lg font-semibold">{project.name}</h2>
-            <p className="text-gray-600">{project.description || "No description available."}</p>
-            <p className="text-gray-500 text-sm">
-              <strong>Start Date:</strong> {project.startDate ? new Date(project.startDate).toLocaleDateString() : "N/A"}
-            </p>
-            <p className="text-gray-500 text-sm">
-              <strong>End Date:</strong> {project.endDate ? new Date(project.endDate).toLocaleDateString() : "N/A"}
-            </p>
+          <div
+            key={project._id}
+            className="border p-6 rounded-xl cursor-pointer shadow-md bg-white hover:shadow-lg hover:scale-105 transition duration-300 ease-in-out"
+          >
+            <h2 className="text-xl font-bold text-blue-600">{project.name}</h2>
+            <p className="text-gray-600 mt-2">{project.description || "No description available."}</p>
+            <div className="mt-4 text-gray-500 text-sm">
+              <p>
+                <strong className="text-gray-800">Start Date:</strong>{" "}
+                {project.startDate ? new Date(project.startDate).toLocaleDateString() : "N/A"}
+              </p>
+              <p>
+                <strong className="text-gray-800">End Date:</strong>{" "}
+                {project.endDate ? new Date(project.endDate).toLocaleDateString() : "N/A"}
+              </p>
+            </div>
           </div>
         ))}
       </div>

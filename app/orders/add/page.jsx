@@ -2,10 +2,12 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import toast from "react-hot-toast";
+import toast, { Toaster } from "react-hot-toast";
 
 export default function AddOrder() {
-    const router = useRouter();
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const [customers, setCustomers] = useState([]);
   const [form, setForm] = useState({
     title: "",
     description: "",
@@ -15,48 +17,52 @@ export default function AddOrder() {
     date: "",
   });
 
-  const [customers, setCustomers] = useState([]);
-  const [message, setMessage] = useState("");
-
   useEffect(() => {
     fetch("/api/customers")
       .then((res) => res.json())
-      .then((data) =>{ setCustomers(data)})
+      .then((data) => setCustomers(data))
       .catch((error) => console.error("Error fetching customers:", error));
   }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setMessage("");
+    setLoading(true);
 
-    const res = await fetch("/api/orders", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
-    });
+    try {
+      const res = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
 
-    const data = await res.json();
+      const data = await res.json();
 
-    if (res.ok) {
+      if (res.ok) {
         toast.success("Order added successfully!");
-        router.push('/orders');
-      setForm({ title: "", description: "", customer: "", amount: "", status: "Pending", date: "" });
-    } else {
-        toast.error("Failed to add order!")
+        setForm({ title: "", description: "", customer: "", amount: "", status: "Pending", date: "" });
+        router.push("/orders")
+      } else {
+        toast.error("Failed to add order!");
+      }
+    } catch (error) {
+      toast.error("Something went wrong!");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="max-w-lg mx-auto mt-10 p-4 bg-white shadow-lg rounded-lg">
-      <h1 className="text-2xl font-bold mb-4">Add Order</h1>
-      {message && <p className={`mb-4 ${message.includes("success") ? "text-green-600" : "text-red-600"}`}>{message}</p>}
-      
+    <div className="max-w-lg mx-auto mt-10 p-6 bg-white shadow-lg rounded-lg">
+      <Toaster />
+      <h1 className="text-2xl font-bold mb-4 text-center">Add Order</h1>
+
       <form onSubmit={handleSubmit}>
         <label className="block font-medium">Order Title:</label>
         <input
           type="text"
           value={form.title}
           onChange={(e) => setForm({ ...form, title: e.target.value })}
+          placeholder="e.g. Website Development"
           className="w-full border p-2 rounded mt-1"
           required
         />
@@ -65,6 +71,7 @@ export default function AddOrder() {
         <textarea
           value={form.description}
           onChange={(e) => setForm({ ...form, description: e.target.value })}
+          placeholder="Brief details about the order..."
           className="w-full border p-2 rounded mt-1"
         />
 
@@ -83,25 +90,32 @@ export default function AddOrder() {
           ))}
         </select>
 
-        <label className="block font-medium mt-2">Amount:</label>
-        <input
-          type="number"
-          value={form.amount}
-          onChange={(e) => setForm({ ...form, amount: e.target.value })}
-          className="w-full border p-2 rounded mt-1"
-          required
-        />
+        <div className="grid grid-cols-2 gap-4 mt-2">
+          <div>
+            <label className="block font-medium">Amount:</label>
+            <input
+              type="number"
+              value={form.amount}
+              onChange={(e) => setForm({ ...form, amount: e.target.value })}
+              placeholder="e.g. 1500"
+              className="w-full border p-2 rounded mt-1"
+              required
+            />
+          </div>
 
-        <label className="block font-medium mt-2">Status:</label>
-        <select
-          value={form.status}
-          onChange={(e) => setForm({ ...form, status: e.target.value })}
-          className="w-full border p-2 rounded mt-1"
-        >
-          <option value="Pending">Pending</option>
-          <option value="Completed">Completed</option>
-          <option value="Cancelled">Cancelled</option>
-        </select>
+          <div>
+            <label className="block font-medium">Status:</label>
+            <select
+              value={form.status}
+              onChange={(e) => setForm({ ...form, status: e.target.value })}
+              className="w-full border p-2 rounded mt-1"
+            >
+              <option value="Pending">Pending</option>
+              <option value="Completed">Completed</option>
+              <option value="Cancelled">Cancelled</option>
+            </select>
+          </div>
+        </div>
 
         <label className="block font-medium mt-2">Date:</label>
         <input
@@ -112,8 +126,12 @@ export default function AddOrder() {
           required
         />
 
-        <button type="submit" className="w-full mt-4 bg-blue-500 text-white p-2 rounded-lg">
-          Add Order
+        <button
+          type="submit"
+          className="w-full mt-4 bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600 transition disabled:opacity-50"
+          disabled={loading}
+        >
+          {loading ? "Adding..." : "Add Order"}
         </button>
       </form>
     </div>

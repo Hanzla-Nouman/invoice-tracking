@@ -112,6 +112,16 @@ const Sidebar = () => {
         { label: "Create Order", path: "/orders/add" }
       ]
     },
+       {
+      id: "contract",
+      label: "Contracts",
+      icon: <FaFileContract size={20} />,
+      visible: true,
+      subItems: [
+        { label: "List Contracts", path: "/contracts" },
+        { label: "Create Contract", path: "/contracts/add" }
+      ]
+    },
     {
       id: "hrm",
       label: "HRM",
@@ -134,16 +144,7 @@ const Sidebar = () => {
         { label: "Add Lead", path: "/leads/add" }
       ]
     },
-    {
-      id: "contract",
-      label: "Contracts",
-      icon: <FaFileContract size={20} />,
-      visible: true,
-      subItems: [
-        { label: "List Contracts", path: "/contracts" },
-        { label: "Create Contract", path: "/contracts/add" }
-      ]
-    },
+ 
     {
       id: "support",
       label: "Support",

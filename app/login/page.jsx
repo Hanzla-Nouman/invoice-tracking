@@ -3,21 +3,26 @@
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { Loader } from "lucide-react"; // Importing Lucide's Loader icon
 
 export default function Login() {
   const [credentials, setCredentials] = useState({ email: "", password: "", role: "Consultant" });
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    setLoading(true);
 
     const res = await signIn("credentials", {
       email: credentials.email,
       password: credentials.password,
       redirect: false,
     });
+
+    setLoading(false);
 
     if (res?.error) {
       setError("Invalid email or password");
@@ -45,20 +50,23 @@ export default function Login() {
             type="password"
             value={credentials.password}
             onChange={(e) => setCredentials({ ...credentials, password: e.target.value })}
-            className="w-full p-2 border rounded-md mt-1"
+            className="w-full p-2border rounded-md mt-1"
             required
           />
-          {/* <label className="block font-semibold mt-3">Role:</label>
-          <select
-            value={credentials.role}
-            onChange={(e) => setCredentials({ ...credentials, role: e.target.value })}
-            className="w-full p-2 border rounded-md mt-1"
+          
+          <button
+            type="submit"
+            className="w-full bg-blue-500 text-white p-2 rounded-lg mt-4 flex items-center justify-center disabled:bg-blue-300"
+            disabled={loading}
           >
-            <option value="Consultant">Consultant</option>
-            <option value="Admin">Admin</option>
-          </select> */}
-          <button type="submit" className="w-full bg-blue-500 text-white p-2 rounded-lg mt-4">
-            Login
+            {loading ? (
+              <>
+                <Loader className="animate-spin h-5 w-5 mr-2" />
+                Logging in...
+              </>
+            ) : (
+              "Login"
+            )}
           </button>
         </form>
       </div>
