@@ -4,6 +4,7 @@ import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Loader } from "lucide-react"; // Importing Lucide's Loader icon
+import toast from "react-hot-toast";
 
 export default function Login() {
   const [credentials, setCredentials] = useState({ email: "", password: "", role: "Consultant" });
@@ -25,8 +26,9 @@ export default function Login() {
     setLoading(false);
 
     if (res?.error) {
-      setError("Invalid email or password");
+      toast.error("Invalid email or password")
     } else {
+      toast.success("Signed in Successfully")
       router.push("/");
     }
   };
@@ -35,7 +37,6 @@ export default function Login() {
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
       <div className="bg-white p-8 rounded-lg shadow-lg w-96">
         <h2 className="text-2xl font-bold text-center">Login</h2>
-        {error && <p className="text-red-500 text-center">{error}</p>}
         <form onSubmit={handleSubmit} className="mt-4">
           <label className="block font-semibold">Email:</label>
           <input
@@ -50,7 +51,7 @@ export default function Login() {
             type="password"
             value={credentials.password}
             onChange={(e) => setCredentials({ ...credentials, password: e.target.value })}
-            className="w-full p-2border rounded-md mt-1"
+            className="w-full p-2 border rounded-md mt-1"
             required
           />
           
@@ -62,7 +63,6 @@ export default function Login() {
             {loading ? (
               <>
                 <Loader className="animate-spin h-5 w-5 mr-2" />
-                Logging in...
               </>
             ) : (
               "Login"
