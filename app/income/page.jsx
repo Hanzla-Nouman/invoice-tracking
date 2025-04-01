@@ -12,18 +12,19 @@ export default function IncomePage() {
     paymentMethod: "Credit Card",
     date: "",
   });
-
+  const router = useRouter();
   const [incomes, setIncomes] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [fetching, setFetching] = useState(true);
+  const [incomesLoading, setIncomesLoading] = useState(true);
   const [showAll, setShowAll] = useState(false);
-const router = useRouter();
 
   useEffect(() => {
     fetch("/api/income")
       .then((res) => res.json())
-      .then((data) => setIncomes(data.incomes))
-      .finally(() => setFetching(false));
+      .then((data) => {
+        setIncomes(data.incomes);
+        setIncomesLoading(false);
+      });
   }, []);
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
@@ -41,12 +42,14 @@ const router = useRouter();
     setLoading(false);
     if (response.ok) {
       toast.success("Income Added!");
-router.push('/')
+      router.push("/");
       setForm({ title: "", amount: "", currency: "USD", paymentMethod: "Credit Card", date: "" });
-
+      
+      setIncomesLoading(true);
       const res = await fetch("/api/income");
       const updatedIncomes = await res.json();
       setIncomes(updatedIncomes.incomes);
+      setIncomesLoading(false);
     } else {
       toast.error("Failed to add income. Try again.");
     }
@@ -130,10 +133,11 @@ router.push('/')
                 </select>
               </div>
             </div>
+
             <button type="submit" className="w-full mt-4 bg-blue-600 text-white p-2 rounded-lg flex items-center justify-center" disabled={loading}>
               {loading ? (
                 <>
-                  <Loader className="animate-spin h-5 w-5 mr-2" />
+                  <Loader className="animate-spin h-5 w-5 mr-2" /> Adding...
                 </>
               ) : (
                 "Add Income"
@@ -144,21 +148,30 @@ router.push('/')
       </div>
 
       <h2 className="text-xl font-bold mt-6">Recent Incomes</h2>
-      {fetching ? (
-        <div className="flex justify-center mt-4"><Loader className="animate-spin h-6 w-6" /></div>
+      {incomesLoading ? (
+        <div className="text-center py-4">
+          <Loader className="animate-spin h-6 w-6 mx-auto" />
+        </div>
       ) : (
-        <ul className="bg-white p-4 rounded-lg shadow mt-4">
-          {(showAll ? incomes : incomes.slice(0, 10)).map((income) => (
-            <li key={income._id} className="border-b p-2">
-              {income.title} - ${income.amount} ({income.currency}) [{income.paymentMethod}]
-            </li>
+        <div className="bg-white p-4 rounded-lg shadow mt-4">
+          {incomes.slice(0, showAll ? incomes.length : 10).map((income) => (
+            <div key={income._id} className="border-b p-3 flex justify-between items-center">
+              <div>
+                <p className="font-semibold">{income.title}</p>
+                <p className="text-gray-600">{income.paymentMethod} | {income.currency} {income.amount}</p>
+              </div>
+              <span className="text-sm text-gray-500">{new Date(income.date).toLocaleDateString()}</span>
+            </div>
           ))}
           {incomes.length > 10 && (
-            <button onClick={() => setShowAll(!showAll)} className="mt-2 w-full text-blue-600 underline">
+            <button
+              className="mt-4 text-blue-600 underline w-full text-center"
+              onClick={() => setShowAll(!showAll)}
+            >
               {showAll ? "Show Less" : "Show All"}
             </button>
           )}
-        </ul>
+        </div>
       )}
     </div>
   );

@@ -5,6 +5,7 @@ import { Chart as ChartJS, LineElement, PointElement, LinearScale, CategoryScale
 import { Line } from "react-chartjs-2";
 import { useRouter } from "next/navigation";
 import CountUp from 'react-countup';
+import { useSession } from "next-auth/react";
 ChartJS.register(LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Legend);
 
 export default function Dashboard() {
@@ -18,7 +19,11 @@ export default function Dashboard() {
   const [consultants, setConsultants] = useState(0);
   const [projects, setProjects] = useState(0);
 
+  const { data: session } = useSession();
+  const role = session?.user?.role;
+
  const router = useRouter();
+
  useEffect(() => {
   async function fetchStats() {
     try {
@@ -150,7 +155,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+  {role ==="Admin" &&    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
         <div onClick={()=>router.push('/customers')}  className="bg-white hover:cursor-pointer hover:-translate-y-1 transition-all duration-100  hover:text-gray-900  p-6 rounded-lg shadow text-center">
           <h2 className="text-lg font-semibold">Customers</h2>
           <p className="text-2xl font-bold">{customers}</p>
@@ -163,7 +168,7 @@ export default function Dashboard() {
           <h2 className="text-lg font-semibold">Projects</h2>
           <p className="text-2xl font-bold">{projects}</p>
         </div>
-      </div>
+      </div>}
 
       <div className="mt-8 bg-white p-6 flex rounded-lg shadow">
         <h2 className="text-lg font-semibold text-gray-700">Financial Overview</h2>

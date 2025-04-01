@@ -1,11 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { FiPlus } from "react-icons/fi";
+import { useRouter } from "next/navigation";
 
 export default function Orders() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const router = useRouter();
 
   useEffect(() => {
     fetch("/api/orders")
@@ -29,12 +32,21 @@ export default function Orders() {
   if (error) return <p className="text-center text-red-500">{error}</p>;
 
   return (
-    <div className="max-w-6xl mx-auto mt-10 p-6 bg-white shadow-lg rounded-lg">
-      <h1 className="text-3xl font-bold mb-6 text-center text-gray-800">
-        All Orders
-      </h1>
+    <div className="max-w-6xl mx-auto mt-4 md:mt-10 p-4 md:p-6 bg-white shadow-lg rounded-lg">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+        <h1 className="text-2xl md:text-3xl font-bold text-gray-800">
+          All Orders
+        </h1>
+        <button
+          onClick={() => router.push("/orders/add")}
+          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
+        >
+          <FiPlus /> Add Order
+        </button>
+      </div>
       
-      <div className="overflow-x-auto">
+      {/* Desktop Table */}
+      <div className="hidden md:block overflow-x-auto">
         <table className="min-w-full bg-white border border-gray-200 rounded-lg shadow-md">
           <thead className="bg-gray-100">
             <tr>
@@ -67,12 +79,15 @@ export default function Orders() {
                 <tr
                   key={order._id}
                   className="border-t border-gray-200 cursor-pointer hover:bg-gray-50 transition"
+                  onClick={() => router.push(`/orders/${order._id}`)}
                 >
                   <td className="px-4 py-3 text-gray-700">{order.title}</td>
                   <td className="px-4 py-3 text-gray-700">
                     {order?.customer?.fullName || "N/A"}
                   </td>
-                  <td className="px-4 py-3 text-gray-700 font-semibold">${order.amount}</td>
+                  <td className="px-4 py-3 text-gray-700 font-semibold">
+                    ${order.amount.toLocaleString()}
+                  </td>
                   <td className="px-4 py-3 text-gray-700">
                     {order.date
                       ? new Date(order.date).toLocaleDateString()
@@ -96,6 +111,52 @@ export default function Orders() {
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobile Cards */}
+      <div className="md:hidden space-y-4">
+        {orders.length === 0 ? (
+          <p className="text-center py-4 text-gray-500">No orders found.</p>
+        ) : (
+          orders.map((order) => (
+            <div
+              key={order._id}
+              className="border border-gray-200 rounded-lg p-4 shadow-sm cursor-pointer hover:bg-gray-50 transition"
+              onClick={() => router.push(`/orders/${order._id}`)}
+            >
+              <div className="flex justify-between items-start">
+                <h3 className="font-medium text-gray-800">{order.title}</h3>
+                <span
+                  className={`px-2 py-1 text-xs font-medium rounded-full ${
+                    order.status === "Pending"
+                      ? "bg-yellow-100 text-yellow-700"
+                      : order.status === "Completed"
+                      ? "bg-green-100 text-green-700"
+                      : "bg-red-100 text-red-700"
+                  }`}
+                >
+                  {order.status}
+                </span>
+              </div>
+              <div className="mt-2 text-sm text-gray-600">
+                <p>
+                  <span className="font-medium">Customer:</span>{" "}
+                  {order?.customer?.fullName || "N/A"}
+                </p>
+                <p>
+                  <span className="font-medium">Budget:</span> $
+                  {order.amount.toLocaleString()}
+                </p>
+                <p>
+                  <span className="font-medium">Date:</span>{" "}
+                  {order.date
+                    ? new Date(order.date).toLocaleDateString()
+                    : "N/A"}
+                </p>
+              </div>
+            </div>
+          ))
+        )}
       </div>
     </div>
   );

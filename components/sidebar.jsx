@@ -9,12 +9,14 @@ import { MdAccountBalance, MdContactSupport, MdManageAccounts, MdSpaceDashboard 
 import { FaAngleDown, FaAngleUp, FaRegCalendarAlt, FaSellsy, FaProjectDiagram, FaFileContract } from "react-icons/fa";
 import { IoPeopleSharp } from "react-icons/io5";
 import { SiGoogleadsense } from "react-icons/si";
-
+import { HiCube } from "react-icons/hi";
+import { IoDocuments } from "react-icons/io5";
 const Sidebar = () => {
-  const { data: session, status } = useSession();
   const router = useRouter();
+  const { data: session } = useSession();
+  const role = session?.user?.role;
 
-  // State management for dropdown toggles
+
   const [dropdownStates, setDropdownStates] = useState({
     customer: false,
     timesheet: false,
@@ -25,6 +27,7 @@ const Sidebar = () => {
     leads: false,
     contract: false,
     support: false,
+    supplier: false,
     order: false
   });
 
@@ -59,17 +62,17 @@ const Sidebar = () => {
       visible: !!session?.user,
       subItems: [
         { label: "List Timesheet", path: "/timesheet" },
-        { label: "Add Timesheet", path: "/timesheet/add", visible: session?.user?.role === "Consultant" }
+        { label: "Add Timesheet", path: "/timesheet/add", visible: role === "Consultant" }
       ]
     },
     {
       id: "customer",
       label: "Customers",
-      icon: <AiFillCustomerService size={20} />,
-      visible: true,
+      icon: <HiCube size={20} />,
+      visible: role === "Admin",
       subItems: [
         { label: "List Customers", path: "/customers" },
-        { label: "Add Customers", path: "/customers/add" }
+        { label: "Add Customers", path: "/customers/add"  }
       ]
     },
     {
@@ -89,7 +92,7 @@ const Sidebar = () => {
       visible: session?.user?.role === "Admin",
       subItems: [
         { label: "List Projects", path: "/projects" },
-        { label: "Add Project", path: "/projects/add" }
+        { label: "Add Project", path: "/projects/add",visible: role === "Admin"  }
       ]
     },
     {
@@ -99,17 +102,17 @@ const Sidebar = () => {
       visible: session?.user?.role === "Admin",
       subItems: [
         { label: "List Consultants", path: "/consultants" },
-        { label: "Add Consultant", path: "/consultants/add" }
+        { label: "Add Consultant", path: "/consultants/add",visible: role === "Admin"  }
       ]
     },
     {
       id: "order",
       label: "Orders",
       icon: <FaSellsy size={20} />,
-      visible: true,
+      visible: role === "Admin",
       subItems: [
         { label: "List Orders", path: "/orders" },
-        { label: "Create Order", path: "/orders/add" }
+        { label: "Create Order", path: "/orders/add" ,visible: role === "Admin" }
       ]
     },
        {
@@ -119,19 +122,19 @@ const Sidebar = () => {
       visible: true,
       subItems: [
         { label: "List Contracts", path: "/contracts" },
-        { label: "Create Contract", path: "/contracts/add" }
+        { label: "Create Contract", path: "/contracts/add",visible: role === "Admin"  }
       ]
     },
     {
       id: "hrm",
       label: "HRM",
       icon: <MdManageAccounts size={20} />,
-      visible: session?.user?.role === "Admin",
+      visible: role === "Admin",
       subItems: [
-        { label: "Employee", path: "/hrm/employee" },
-        { label: "Consultant", path: "/hrm/consultant" },
-        { label: "Attendance", path: "/hrm/attendance" },
-        { label: "Payroll", path: "/hrm/payroll" }
+        { label: "Employee", path: "/employees" },
+        { label: "Add Employee", path: "/employees/add" },
+        { label: "Attendance", path: "/attendance" },
+        { label: "Mark Attendance", path: "/attendance/mark" },
       ]
     },
     {
@@ -144,6 +147,26 @@ const Sidebar = () => {
         { label: "Add Lead", path: "/leads/add" }
       ]
     },
+    {
+      id: "supplier",
+      label: "Supplier",
+      icon: <HiCube size={20} />,
+      visible: role === "Admin",
+      subItems: [
+        { label: "List Suppliers", path: "/suppliers" },
+        { label: "Add Supplier", path: "/suppliers/add" }
+      ]
+    },
+ 
+    {
+      id: "report",
+      label: "Reports",
+      icon: <IoDocuments size={20} />,
+      visible: role === "Admin",
+      subItems: [
+        { label: "Export Reports", path: "/reports" }
+      ]
+    },
  
     {
       id: "support",
@@ -151,8 +174,8 @@ const Sidebar = () => {
       icon: <MdContactSupport size={20} />,
       visible: true,
       subItems: [
-        { label: "Tickets", path: "/support/tickets" },
-        { label: "Create Ticket", path: "/support/create" }
+        { label: "Tickets", path: "/tickets" },
+        { label: "Create Ticket", path: "/tickets/add" }
       ]
     },
     {
@@ -162,7 +185,7 @@ const Sidebar = () => {
       path: "/login",
       visible: !session?.user,
     }
-  ], [session]);
+  ], [session,role]);
 
   return (
     <aside

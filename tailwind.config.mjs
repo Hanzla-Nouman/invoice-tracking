@@ -15,6 +15,9 @@ export default {
         'height': 'height',
         'max-height': 'max-height',
       },
+      fontFamily: {
+        gruppo: ["var(--font-gruppo)"], // Add this
+      },
 
     },
   },
