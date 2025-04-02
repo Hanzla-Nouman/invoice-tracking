@@ -3,7 +3,10 @@
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import toast from "react-hot-toast";
-
+import { Loader } from "lucide-react";
+import { MdCancel } from "react-icons/md";
+import { FaEdit } from "react-icons/fa";
+import { FaSave } from "react-icons/fa";
 export default function Timesheet() {
   const { data: session } = useSession();
   const [timesheets, setTimesheets] = useState([]);
@@ -24,7 +27,13 @@ export default function Timesheet() {
         const res = await fetch(`/api/timesheets?userId=${userId}&role=${role}`);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
-        setTimesheets(data);
+        
+        // Sort timesheets by createdAt date (newest first)
+        const sortedTimesheets = data.sort((a, b) => 
+          new Date(b.createdAt) - new Date(a.createdAt)
+        );
+        
+        setTimesheets(sortedTimesheets);
       } catch (err) {
         console.error("Error fetching timesheets:", err);
         setError("Failed to load timesheets. Please try again later.");
@@ -33,7 +42,6 @@ export default function Timesheet() {
         setLoading(false);
       }
     };
-
     fetchTimesheets();
   }, [role, userId]);
 
@@ -114,9 +122,9 @@ export default function Timesheet() {
   };
 
   if (loading) return (
-    <div className="flex justify-center items-center h-64">
-      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-    </div>
+    <div className="flex justify-center py-20">
+    <Loader className="animate-spin w-10 h-10 text-gray-600" />
+  </div>
   );
 
   if (error) return (
@@ -148,27 +156,28 @@ export default function Timesheet() {
           <table className="w-full border-collapse">
             <thead>
               <tr className="bg-gray-100">
-                {role === "Admin" && <th className="p-3 text-left border-b">Consultant</th>}
-                <th className="p-3 text-left border-b">Project</th>
-                <th className="p-3 text-left border-b">Work Type</th>
-                <th className="p-3 text-left border-b">Work Quantity</th>
-                <th className="p-3 text-left border-b">Rate</th>
-                <th className="p-3 text-left border-b">Total Amount</th>
-                <th className="p-3 text-left border-b">Status</th>
-                <th className="p-3 text-left border-b">Payment Status</th>
-                <th className="p-3 text-left border-b">Actions</th>
+                {role === "Admin" && <th className="p-2 text-left border-b">Consultant</th>}
+                <th className="p-2 text-left border-b">Project</th>
+                <th className="p-2 text-left border-b">Type</th>
+                <th className="p-2 text-left border-b">Quantity</th>
+                <th className="p-2 text-left border-b">Rate</th>
+                <th className="p-2 text-left border-b">Total</th>
+                <th className="p-2 text-left border-b">Status</th>
+                <th className="p-2 text-left border-b">Payment</th>
+
+                <th className="p-2 text-left border-b">Actions</th>
               </tr>
             </thead>
             <tbody>
               {timesheets.map((t) => (
                 <tr key={t._id} className="border-b hover:bg-gray-50">
                   {role === "Admin" && (
-                    <td className="p-3">{t.consultant?.name || "Unknown"}</td>
+                    <td className="p-2 text-blue-600">{t.consultant?.name || "Unknown"}</td>
                   )}
-                  <td className="p-3">{t.project?.name || "No Project"}</td>
-                  <td className="p-3">{t.workType}</td>
+                  <td className="p-2">{t.project?.name || "No Project"}</td>
+                  <td className="p-2">{t.workType}</td>
 
-                  <td className="p-3">
+                  <td className="p-2">
                     {editingIds.includes(t._id) ? (
                       <input
                         type="number"
@@ -185,7 +194,7 @@ export default function Timesheet() {
                     )}
                   </td>
 
-                  <td className="p-3">
+                  <td className="p-2">
                     {editingIds.includes(t._id) && role === "Admin" ? (
                       <input
                         type="number"
@@ -202,14 +211,14 @@ export default function Timesheet() {
                     )}
                   </td>
 
-                  <td className="p-3 font-medium">
+                  <td className="p-2 font-bold">
   ${(
     ((editedTimesheets[t._id]?.workQuantity ?? t.workQuantity) || 0) * 
     ((editedTimesheets[t._id]?.rate ?? t.rate) || 0)
   ).toFixed(2)}
 </td>
 
-                  <td className="p-3">
+                  <td className="p-2">
                     {editingIds.includes(t._id) && role === "Admin" ? (
                       <select
                         className="p-1 border rounded focus:ring-2 focus:ring-blue-300"
@@ -231,7 +240,7 @@ export default function Timesheet() {
                     )}
                   </td>
 
-                  <td className="p-3">
+                  <td className="p-2">
                     {editingIds.includes(t._id) && role === "Admin" ? (
                       <select
                         className="p-1 border rounded focus:ring-2 focus:ring-blue-300"
@@ -250,35 +259,36 @@ export default function Timesheet() {
                       </span>
                     )}
                   </td>
+             
 
-                  <td className="p-3">
+                  <td className="p-2">
                     <div className="flex space-x-2">
                       {editingIds.includes(t._id) ? (
                         <>
                           <button
                             onClick={() => handleSave(t._id)}
                             disabled={!editedTimesheets[t._id]}
-                            className={`px-3 py-1 rounded text-white ${
+                            className={`p-1 rounded text-white ${
                               editedTimesheets[t._id] 
                                 ? "bg-green-500 hover:bg-green-600" 
                                 : "bg-gray-300 cursor-not-allowed"
                             }`}
                           >
-                            Save
+                          <FaSave size={20}/>
                           </button>
                           <button
                             onClick={() => toggleEdit(t._id)}
-                            className="px-3 py-1 bg-gray-500 text-white rounded hover:bg-gray-600"
+                            className="p-1 bg-gray-500 text-white rounded hover:bg-gray-600"
                           >
-                            Cancel
+                              <MdCancel size={20}/>
                           </button>
                         </>
                       ) : (
                         <button
                           onClick={() => toggleEdit(t._id)}
-                          className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+                          className="p-1 bg-blue-500 text-white rounded hover:bg-blue-600"
                         >
-                          Edit
+                            <FaEdit size={20}/>
                         </button>
                       )}
                     </div>

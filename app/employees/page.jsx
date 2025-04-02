@@ -15,7 +15,7 @@ export default function EmployeesList() {
         return res.json();
       })
       .then((data) => {
-        setEmployees(data);
+        setEmployees(data.reverse());
         setLoading(false);
       })
       .catch((err) => {

@@ -15,7 +15,7 @@ export default function LeadsList() {
         return res.json();
       })
       .then((data) => {
-        setLeads(data);
+        setLeads(data.reverse());
         setLoading(false);
       })
       .catch((err) => {

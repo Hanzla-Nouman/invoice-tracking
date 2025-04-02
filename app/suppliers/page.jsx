@@ -15,7 +15,7 @@ export default function SuppliersList() {
         return res.json();
       })
       .then((data) => {
-        setSuppliers(data);
+        setSuppliers(data.reverse());
         setLoading(false);
       })
       .catch((err) => {

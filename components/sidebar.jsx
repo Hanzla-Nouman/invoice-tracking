@@ -79,7 +79,7 @@ const Sidebar = () => {
       id: "accounting",
       label: "Accounting",
       icon: <MdAccountBalance size={20} />,
-      visible: true,
+      visible: role === "Admin",
       subItems: [
         { label: "Add Expense", path: "/expense" },
         { label: "Add Income", path: "/income" }
@@ -89,7 +89,7 @@ const Sidebar = () => {
       id: "project",
       label: "Project",
       icon: <FaProjectDiagram size={20} />,
-      visible: session?.user?.role === "Admin",
+      visible: role === "Admin",
       subItems: [
         { label: "List Projects", path: "/projects" },
         { label: "Add Project", path: "/projects/add",visible: role === "Admin"  }
@@ -99,7 +99,7 @@ const Sidebar = () => {
       id: "consultant",
       label: "Consultants",
       icon: <IoPeopleSharp size={20} />,
-      visible: session?.user?.role === "Admin",
+      visible: role === "Admin",
       subItems: [
         { label: "List Consultants", path: "/consultants" },
         { label: "Add Consultant", path: "/consultants/add",visible: role === "Admin"  }

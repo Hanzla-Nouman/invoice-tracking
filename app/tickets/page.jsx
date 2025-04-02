@@ -47,6 +47,7 @@ export default function TicketsList() {
               <tr className="bg-gray-100 border-b">
                 <th className="px-4 py-3 text-left">Subject</th>
                 <th className="px-4 py-3 text-left">Status</th>
+                <th className="px-4 py-3 text-left">Priority</th>
                 <th className="px-4 py-3 text-left">Created On</th>
               </tr>
             </thead>
@@ -56,6 +57,7 @@ export default function TicketsList() {
                   <tr key={ticket._id} className="border-b">
                     <td className="px-4 py-3">{ticket.title}</td>
                     <td className="px-4 py-3">{ticket.status}</td>
+                    <td className="px-4 py-3">{ticket.priority}</td>
                     <td className="px-4 py-3">{new Date(ticket.createdAt).toLocaleDateString()}</td>
                   </tr>
                 ))

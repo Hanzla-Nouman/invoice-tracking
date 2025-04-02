@@ -1,5 +1,6 @@
 "use client";
 
+import { Loader } from "lucide-react";
 import { useEffect, useState } from "react";
 
 export default function Contracts() {
@@ -14,7 +15,7 @@ export default function Contracts() {
         return res.json();
       })
       .then((data) => {
-          setContracts(data);
+          setContracts(data.reverse());
           setLoading(false);
         })
       .catch((err) => {
@@ -25,7 +26,9 @@ export default function Contracts() {
   }, []);
 
           console.log("contract: ",contracts)
-  if (loading) return <p className="text-center text-gray-500 mt-14">Loading contracts...</p>;
+  if (loading) return  <div className="flex justify-center py-20">
+  <Loader className="animate-spin w-10 h-10 text-gray-600" />
+</div>;
   if (error) return <p className="text-center text-red-500">{error}</p>;
 
   return (

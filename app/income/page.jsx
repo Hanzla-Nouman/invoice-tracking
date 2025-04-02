@@ -22,10 +22,11 @@ export default function IncomePage() {
     fetch("/api/income")
       .then((res) => res.json())
       .then((data) => {
-        setIncomes(data.incomes);
+        setIncomes(data.incomes.reverse()); // Reverse the order
         setIncomesLoading(false);
       });
   }, []);
+  
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 

@@ -22,10 +22,11 @@ export default function ExpensePage() {
     fetch("/api/expense")
       .then((res) => res.json())
       .then((data) => {
-        setExpenses(data.expenses);
+        setExpenses(data.expenses.reverse()); // Reverse the order
         setExpensesLoading(false);
       });
   }, []);
+  
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 

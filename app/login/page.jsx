@@ -3,11 +3,16 @@
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { Loader } from "lucide-react"; // Importing Lucide's Loader icon
+import { Loader, Eye, EyeOff } from "lucide-react";
 import toast from "react-hot-toast";
 
 export default function Login() {
-  const [credentials, setCredentials] = useState({ email: "", password: "", role: "Consultant" });
+  const [credentials, setCredentials] = useState({ 
+    email: "", 
+    password: "", 
+    role: "Consultant" 
+  });
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -26,9 +31,9 @@ export default function Login() {
     setLoading(false);
 
     if (res?.error) {
-      toast.error("Invalid email or password")
+      toast.error("Invalid email or password");
     } else {
-      toast.success("Signed in Successfully")
+      toast.success("Signed in successfully");
       router.push("/");
     }
   };
@@ -36,36 +41,57 @@ export default function Login() {
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
       <div className="bg-white p-8 rounded-lg shadow-lg w-96">
-        <h2 className="text-2xl font-bold text-center">Login</h2>
-        <form onSubmit={handleSubmit} className="mt-4">
-          <label className="block font-semibold">Email:</label>
-          <input
-            type="email"
-            value={credentials.email}
-            onChange={(e) => setCredentials({ ...credentials, email: e.target.value })}
-            className="w-full p-2 border rounded-md mt-1"
-            required
-          />
-          <label className="block font-semibold mt-3">Password:</label>
-          <input
-            type="password"
-            value={credentials.password}
-            onChange={(e) => setCredentials({ ...credentials, password: e.target.value })}
-            className="w-full p-2 border rounded-md mt-1"
-            required
-          />
-          
+        <h2 className="text-2xl font-bold text-center mb-6">Login</h2>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block font-bold text-gray-700 mb-1">Email:</label>
+            <input
+              type="email"
+              value={credentials.email}
+              onChange={(e) => setCredentials({ ...credentials, email: e.target.value })}
+              placeholder="johndoe@gmail.com"
+              className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block font-bold text-gray-700 mb-1">Password:</label>
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                value={credentials.password}
+                onChange={(e) => setCredentials({ ...credentials, password: e.target.value })}
+                placeholder="Enter your password"
+                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-10"
+                required
+              />
+              <button
+                type="button"
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? (
+                  <EyeOff className="h-5 w-5" />
+                ) : (
+                  <Eye className="h-5 w-5" />
+                )}
+              </button>
+            </div>
+          </div>
+
           <button
             type="submit"
-            className="w-full bg-blue-500 text-white p-2 rounded-lg mt-4 flex items-center justify-center disabled:bg-blue-300"
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md transition duration-150 ease-in-out flex items-center justify-center disabled:bg-blue-300 disabled:cursor-not-allowed"
             disabled={loading}
           >
             {loading ? (
               <>
                 <Loader className="animate-spin h-5 w-5 mr-2" />
+                Signing in...
               </>
             ) : (
-              "Login"
+              "Sign In"
             )}
           </button>
         </form>

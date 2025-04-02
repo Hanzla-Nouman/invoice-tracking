@@ -2,6 +2,7 @@
 import { signOut, useSession } from 'next-auth/react'
 import { usePathname, useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react'
+import toast from 'react-hot-toast';
 
 
 export default function Navbar() {
@@ -62,16 +63,21 @@ export default function Navbar() {
               <ul className="py-2">
              
               
-                <li onClick={()=>{signOut();setDropdownOpen(!isDropdownOpen)}} className='cursor-pointer'>
+                <li onClick={()=>{signOut();setDropdownOpen(!isDropdownOpen);toast.success("Signed Out Successfully!")}} className='cursor-pointer'>
                   <span className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dar:hover:bg-gray-600 dar:text-gray-200 dar:hover:text-white">
                     Sign out
+                  </span>
+                </li>
+                <li onClick={()=>{setDropdownOpen(!isDropdownOpen)}} className='cursor-pointer'>
+                  <span className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dar:hover:bg-gray-600 dar:text-gray-200 dar:hover:text-white">
+                    Close
                   </span>
                 </li>
               </ul>
             </div>
           )}
 
-          {/* Mobile Menu Button */}
+ 
           <button
             data-collapse-toggle="navbar-user"
             type="button"

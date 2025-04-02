@@ -57,7 +57,7 @@ const router = useRouter();
       toast.success("Project added successfully!");
       setForm({ name: "", description: "", startDate: "", endDate: "", assignedConsultant: "" });
     } else {
-      toast.success("Failed to add project.");
+      toast.error("Failed to add project.");
     }
   };
 

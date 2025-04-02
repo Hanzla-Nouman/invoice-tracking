@@ -1,5 +1,6 @@
 "use client";
 
+import { Loader } from "lucide-react";
 import { useEffect, useState } from "react";
 
 export default function Projects() {
@@ -14,7 +15,7 @@ export default function Projects() {
         return res.json();
       })
       .then((data) => {
-        setProjects(data);
+        setProjects(data.reverse());
         setLoading(false);
       })
       .catch((err) => {
@@ -24,7 +25,9 @@ export default function Projects() {
       });
   }, []);
 
-  if (loading) return <p className="text-center text-gray-500 mt-14">Loading projects...</p>;
+  if (loading) return  <div className="flex justify-center py-20">
+  <Loader className="animate-spin w-10 h-10 text-gray-600" />
+</div>;
   if (error) return <p className="text-center text-red-500">{error}</p>;
 
   return (
