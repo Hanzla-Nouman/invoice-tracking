@@ -177,6 +177,13 @@ export default function Dashboard() {
 
     fetchData();
   }, []);
+useEffect(() => {
+  if(!session?.user){
+    router.push('/login')
+  }
+
+
+}, [])
 
   function calculateTotals(data, type) {
     const currentMonth = new Date().getMonth() + 1; // Get current month (1-12)
