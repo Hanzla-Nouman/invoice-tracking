@@ -66,7 +66,7 @@ export default function AddTimesheet() {
       {message && <p className={`mb-4 ${message.includes("success") ? "text-green-600" : "text-red-600"}`}>{message}</p>}
 
       <form onSubmit={handleSubmit}>
-        <label className="block font-medium">Project:</label>
+        <label className="block font-semibold">Project:</label>
         <select
           value={form.project}
           onChange={(e) => setForm({ ...form, project: e.target.value })}
@@ -85,7 +85,7 @@ export default function AddTimesheet() {
           )}
         </select>
 
-        <label className="block font-medium mt-2">Work Type:</label>
+        <label className="block font-semibold mt-2">Work Type:</label>
         <select
           value={form.workType}
           onChange={(e) => setForm({ ...form, workType: e.target.value, workQuantity: "" })}
@@ -95,7 +95,7 @@ export default function AddTimesheet() {
           <option value="Days">Days</option>
         </select>
 
-        <label className="block font-medium mt-3">{form.workType === "Hours" ? "Hours Worked:" : "Days Worked:"}</label>
+        <label className="block font-semibold mt-3">{form.workType === "Hours" ? "Hours Worked:" : "Days Worked:"}</label>
         <input
           type="number"
           value={form.workQuantity}
@@ -104,7 +104,7 @@ export default function AddTimesheet() {
           required
         />
 
-        <label className="block font-medium mt-3">Notes (Optional):</label>
+        <label className="block font-semibold mt-3">Notes (Optional):</label>
         <textarea
           value={form.notes}
           onChange={(e) => setForm({ ...form, notes: e.target.value })}

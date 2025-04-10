@@ -1,6 +1,6 @@
 import dbConnect from "@/lib/db";
 import Customer from "@/models/customer";
-import User from "@/models/user";
+import Users from "@/models/user";
 import Project from "@/models/project";
 import { NextResponse } from "next/server";
 
@@ -9,7 +9,7 @@ export async function GET() {
     await dbConnect();
 
     const customerCount = await Customer.countDocuments();
-    const consultantCount = await User.countDocuments({ role: "Consultant" });
+    const consultantCount = await Users.countDocuments({ role: "Consultant" });
     const projectCount = await Project.countDocuments();
 
     return NextResponse.json({

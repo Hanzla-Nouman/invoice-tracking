@@ -1,121 +1,126 @@
 "use client";
-
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 export default function MarkAttendance() {
   const [employees, setEmployees] = useState([]);
   const [attendance, setAttendance] = useState({});
+  const [date, setDate] = useState(new Date());
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
-    fetch("/api/employees")
-      .then((res) => res.json())
-      .then((data) => {
-        setEmployees(data);
-        // Default all employees to "Present"
-        const defaultAttendance = {};
-        data.forEach((emp) => {
-          defaultAttendance[emp._id] = "Present";
-        });
-        setAttendance(defaultAttendance);
-      })
-      .catch(() => toast.error("Failed to fetch employees"));
+    fetchEmployees();
   }, []);
 
-  const handleChange = (empId, status) => {
-    setAttendance((prev) => ({
-      ...prev,
-      [empId]: status,
-    }));
+  const fetchEmployees = async () => {
+    try {
+      const res = await fetch("/api/employees");
+      const data = await res.json();
+      setEmployees(data);
+      
+      // Initialize all as Present
+      const defaultAttendance = {};
+      data.forEach(emp => {
+        defaultAttendance[emp._id] = "Present";
+      });
+      setAttendance(defaultAttendance);
+    } catch (error) {
+      toast.error("Failed to load employees");
+    }
+  };
+
+  const handleStatusChange = (empId, status) => {
+    setAttendance(prev => ({ ...prev, [empId]: status }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
-    const attendanceRecords = employees.map((emp) => ({
-      employee: emp._id,
-      date: new Date().toISOString(),
-      status: attendance[emp._id] || "Absent",
-    }));
+    try {
+      const attendanceRecords = employees.map(emp => ({
+        employee: emp._id,
+        status: attendance[emp._id] || "Absent"
+      }));
 
-    const res = await fetch("/api/attendance", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ attendanceRecords }),
-    });
+      const res = await fetch("/api/attendance", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ date, attendanceRecords })
+      });
 
-    const data = await res.json();
-    setLoading(false);
-
-    if (res.ok) {
-      toast.success("Attendance marked successfully!");
-      router.push("/attendance");
-    } else {
-      toast.error(data.message || "Failed to mark attendance.");
+      const data = await res.json();
+      if (res.ok) {
+        toast.success("Attendance marked successfully");
+        router.push("/attendance");
+      } else {
+        throw new Error(data.message || "Failed to mark attendance");
+      }
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="max-w-4xl mx-auto mt-10 p-6 bg-white shadow-lg rounded-lg">
-      <h1 className="text-2xl font-bold text-center mb-6">Mark Attendance</h1>
+    <div className="max-w-4xl mx-auto p-4 mt-4">
+      <h1 className="text-2xl font-bold mb-6">Mark Attendance</h1>
+      
+      <div className="mb-6">
+        <label className="block mb-2 font-semibold">Attendance Date</label>
+        <DatePicker
+          selected={date}
+          onChange={date => setDate(date)}
+          className="border p-2 rounded w-full"
+          maxDate={new Date()}
+        />
+      </div>
 
       <form onSubmit={handleSubmit}>
         <div className="overflow-x-auto">
-          <table className="min-w-full bg-white border border-gray-300 rounded-lg">
+          <table className="min-w-full border">
             <thead>
-              <tr className="bg-gray-100 border-b">
-                <th className="px-4 py-3 text-left">Employee</th>
-                <th className="px-4 py-3 text-center">Present</th>
-                <th className="px-4 py-3 text-center">Absent</th>
+              <tr className="bg-gray-100">
+                <th className="p-3 text-left">Employee</th>
+                <th className="p-3">Present</th>
+                <th className="p-3">Absent</th>
+                <th className="p-3">Late</th>
+                <th className="p-3">Half-Day</th>
               </tr>
             </thead>
             <tbody>
-              {employees.length > 0 ? (
-                employees.map((emp) => (
-                  <tr key={emp._id} className="border-b">
-                    <td className="px-4 py-3">{emp.name}</td>
-                    <td className="px-4 py-3 text-center">
+              {employees.map(emp => (
+                <tr key={emp._id} className="border-b">
+                  <td className="p-3">{emp.name}</td>
+                  {["Present", "Absent", "Late", "Half-Day"].map(status => (
+                    <td key={status} className="p-3 text-center">
                       <input
                         type="radio"
                         name={`attendance-${emp._id}`}
-                        value="Present"
-                        checked={attendance[emp._id] === "Present"}
-                        onChange={() => handleChange(emp._id, "Present")}
-                        className="w-5 h-5"
+                        checked={attendance[emp._id] === status}
+                        onChange={() => handleStatusChange(emp._id, status)}
+                        className="h-4 w-4"
                       />
                     </td>
-                    <td className="px-4 py-3 text-center">
-                      <input
-                        type="radio"
-                        name={`attendance-${emp._id}`}
-                        value="Absent"
-                        checked={attendance[emp._id] === "Absent"}
-                        onChange={() => handleChange(emp._id, "Absent")}
-                        className="w-5 h-5"
-                      />
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="3" className="text-center py-4 text-gray-500">
-                    No employees found.
-                  </td>
+                  ))}
                 </tr>
-              )}
+              ))}
             </tbody>
           </table>
         </div>
 
-        <div className="flex justify-center mt-6">
-          <button type="submit" className="w-1/3 p-2 bg-blue-500 text-white rounded" disabled={loading}>
-            {loading ? "Saving..." : "Save Attendance"}
-          </button>
-        </div>
+        <button
+          type="submit"
+          disabled={loading}
+          className="mt-6 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
+        >
+          {loading ? "Saving..." : "Save Attendance"}
+        </button>
       </form>
     </div>
   );

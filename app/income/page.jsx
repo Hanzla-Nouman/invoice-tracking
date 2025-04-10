@@ -64,7 +64,7 @@ export default function IncomePage() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block font-medium">Title:</label>
+              <label className="block font-semibold">Title:</label>
               <input
                 name="title"
                 type="text"
@@ -79,7 +79,7 @@ export default function IncomePage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block font-medium">Amount:</label>
+                <label className="block font-semibold">Amount:</label>
                 <input
                   name="amount"
                   type="number"
@@ -92,7 +92,7 @@ export default function IncomePage() {
                 />
               </div>
               <div>
-                <label className="block font-medium">Date:</label>
+                <label className="block font-semibold">Date:</label>
                 <input
                   name="date"
                   type="date"
@@ -104,7 +104,7 @@ export default function IncomePage() {
                 />
               </div>
               <div>
-                <label className="block font-medium">Payment Method:</label>
+                <label className="block font-semibold">Payment Method:</label>
                 <select
                   name="paymentMethod"
                   value={form.paymentMethod}
@@ -119,7 +119,7 @@ export default function IncomePage() {
                 </select>
               </div>
               <div>
-                <label className="block font-medium">Currency:</label>
+                <label className="block font-semibold">Currency:</label>
                 <select
                   name="currency"
                   value={form.currency}

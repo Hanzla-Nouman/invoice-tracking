@@ -1,12 +1,27 @@
-import mongoose from "mongoose";
+// models/project.js
+import mongoose from 'mongoose';
 
 const ProjectSchema = new mongoose.Schema({
-  name: { type: String, required: true, unique: true },
-  description: { type: String },
-  startDate: { type: Date },
-  endDate: { type: Date },
-  assignedConsultants: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }], // Assign consultants
+  name: {
+    type: String,
+    required: true
+  },
+  description: String,
+  startDate: Date,
+  endDate: Date,
+  status: {
+    type: String,
+    enum: ['Draft', 'Started', 'Completed'],
+    default: 'Draft'
+  },
+  budget: {
+    type: Number,
+    default: 0
+  },
+  assignedConsultants: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Users'
+  }]
 }, { timestamps: true });
 
-const Project = mongoose.models.Project || mongoose.model("Project", ProjectSchema);
-export default Project;
+export default mongoose.models.Project || mongoose.model('Project', ProjectSchema);

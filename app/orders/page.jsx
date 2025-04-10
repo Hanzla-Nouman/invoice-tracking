@@ -40,12 +40,7 @@ export default function Orders() {
         <h1 className="text-2xl md:text-3xl font-bold text-gray-800">
           All Orders
         </h1>
-        <button
-          onClick={() => router.push("/orders/add")}
-          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
-        >
-          <FiPlus /> Add Order
-        </button>
+       
       </div>
       
       {/* Desktop Table */}
@@ -53,19 +48,19 @@ export default function Orders() {
         <table className="min-w-full bg-white border border-gray-200 rounded-lg shadow-md">
           <thead className="bg-gray-100">
             <tr>
-              <th className="px-4 py-3 text-left text-gray-600 font-medium">
+              <th className="px-4 py-3 text-left text-gray-600 font-semibold">
                 Title
               </th>
-              <th className="px-4 py-3 text-left text-gray-600 font-medium">
+              <th className="px-4 py-3 text-left text-gray-600 font-semibold">
                 Customer
               </th>
-              <th className="px-4 py-3 text-left text-gray-600 font-medium">
+              <th className="px-4 py-3 text-left text-gray-600 font-semibold">
                 Budget
               </th>
-              <th className="px-4 py-3 text-left text-gray-600 font-medium">
+              <th className="px-4 py-3 text-left text-gray-600 font-semibold">
                 Date
               </th>
-              <th className="px-4 py-3 text-center text-gray-600 font-medium">
+              <th className="px-4 py-3 text-center text-gray-600 font-semibold">
                 Status
               </th>
             </tr>
@@ -98,7 +93,7 @@ export default function Orders() {
                   </td>
                   <td className="px-4 py-3 text-center">
                     <span
-                      className={`px-3 py-1 text-sm font-medium rounded-full ${
+                      className={`px-3 py-1 text-sm font-semibold rounded-full ${
                         order.status === "Pending"
                           ? "bg-yellow-100 text-yellow-700"
                           : order.status === "Completed"
@@ -128,9 +123,9 @@ export default function Orders() {
               onClick={() => router.push(`/orders/${order._id}`)}
             >
               <div className="flex justify-between items-start">
-                <h3 className="font-medium text-gray-800">{order.title}</h3>
+                <h3 className="font-semibold text-gray-800">{order.title}</h3>
                 <span
-                  className={`px-2 py-1 text-xs font-medium rounded-full ${
+                  className={`px-2 py-1 text-xs font-semibold rounded-full ${
                     order.status === "Pending"
                       ? "bg-yellow-100 text-yellow-700"
                       : order.status === "Completed"
@@ -143,15 +138,15 @@ export default function Orders() {
               </div>
               <div className="mt-2 text-sm text-gray-600">
                 <p>
-                  <span className="font-medium">Customer:</span>{" "}
+                  <span className="font-semibold">Customer:</span>{" "}
                   {order?.customer?.fullName || "N/A"}
                 </p>
                 <p>
-                  <span className="font-medium">Budget:</span> $
+                  <span className="font-semibold">Budget:</span> $
                   {order.amount.toLocaleString()}
                 </p>
                 <p>
-                  <span className="font-medium">Date:</span>{" "}
+                  <span className="font-semibold">Date:</span>{" "}
                   {order.date
                     ? new Date(order.date).toLocaleDateString()
                     : "N/A"}

@@ -1,7 +1,7 @@
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
-import User from "@/models/user";
+import Users from "@/models/user";
 import dbConnect from "@/lib/db";
 
 
@@ -18,10 +18,10 @@ export const authOptions = {
       },
       async authorize(credentials) {
         await dbConnect();
-        const user = await User.findOne({ email: credentials.email });
+        const user = await Users.findOne({ email: credentials.email });
 
 
-        if (!user) throw new Error("User not found!");
+        if (!user) throw new Error("Users not found!");
 
         const isMatch = await bcrypt.compare(credentials.password, user.password);
         if (!isMatch) throw new Error("Invalid password!");

@@ -51,7 +51,7 @@ export default function LeadsList() {
                   <tr key={lead._id} className="border-b">
                     <td className="px-4 py-3">{lead.name}</td>
                     <td className="px-4 py-3">{lead.title}</td>
-                    <td className="px-4 py-3">{lead.email}</td>
+                    <td className="px-4 py-3 text-blue-700">{lead.email}</td>
                     <td className="px-4 py-3">{new Date(lead.createdAt).toLocaleDateString()}</td>
                     <td className="px-4 py-3">{lead.source}</td>
                   </tr>

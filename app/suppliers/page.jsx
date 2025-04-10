@@ -3,11 +3,11 @@
 import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 import { Loader } from "lucide-react";
-
+import { useRouter } from "next/navigation";
 export default function SuppliersList() {
   const [suppliers, setSuppliers] = useState([]);
   const [loading, setLoading] = useState(true);
-
+  const router = useRouter();
   useEffect(() => {
     fetch("/api/suppliers")
       .then((res) => {
@@ -48,9 +48,11 @@ export default function SuppliersList() {
             <tbody>
               {suppliers.length > 0 ? (
                 suppliers.map((supplier) => (
-                  <tr key={supplier._id} className="border-b">
+                  <tr key={supplier._id} className="border-b  hover:bg-gray-50 cursor-pointer"
+                  onClick={() => router.push(`/suppliers/${supplier._id}`)}
+                  >
                     <td className="px-4 py-3">{supplier.name}</td>
-                    <td className="px-4 py-3">{supplier.email}</td>
+                    <td className="px-4 py-3 text-blue-700">{supplier.email}</td>
                     <td className="px-4 py-3">{supplier.phone || "N/A"}</td>
                     <td className="px-4 py-3">{supplier.country}</td>
                     <td className="px-4 py-3">{supplier.postalCode || "N/A"}</td>

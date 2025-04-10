@@ -27,7 +27,7 @@ const Page = () => {
                 <span className="self-center text-xl font-semibold sm:text-2xl whitespace-nowrap dark:text-white">Flowbite</span>
               </a>
             </div>
-            {/* User dropdown remains the same */}
+            {/* Users dropdown remains the same */}
           </div>
         </div>
       </nav>

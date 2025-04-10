@@ -4,13 +4,25 @@ const contractSchema = new mongoose.Schema(
   {
     title: { type: String, required: true },
     description: { type: String },
-    consultant: { type: mongoose.Schema.Types.ObjectId, ref: "Consultant", required: true },
-    customer: { type: mongoose.Schema.Types.ObjectId, ref: "Customer", required: true }, // ✅ Ensure this is `customer`
+    consultant: { type: mongoose.Schema.Types.ObjectId, ref: "Users", required: true },
+    customer: { type: mongoose.Schema.Types.ObjectId, ref: "Customer", required: true },
     startDate: { type: Date, required: true },
     endDate: { type: Date, required: true },
-    amount: { type: Number, default: 0 },
-    paymentTerms: { type: String, enum: ["Upfront", "Milestone", "Recurring"], default: "Milestone" },
-    status: { type: String, enum: ["Draft", "Pending Approval", "Active", "Completed", "Terminated"], default: "Draft" }
+    rate: { type: Number, required: true },
+    rateType: { type: String, enum: ["hour", "day", "fixed"], default: "hour", required: true },
+    paymentTerms: { type: String, enum: ["15 days", "30 days", "60 days"], default: "30 days", required: true },
+    status: { 
+      type: String, 
+      enum: ["Draft", "Active", "Completed", "Terminated", "On Hold"], 
+      default: "Draft",
+      required: true 
+    },
+    maxDaysPerYear: {
+      type: Number,
+      min: 1,      
+      max: 366,   
+      default: null
+    }
   },
   { timestamps: true }
 );

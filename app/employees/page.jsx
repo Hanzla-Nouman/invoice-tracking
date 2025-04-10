@@ -3,10 +3,13 @@
 import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 import { Loader } from "lucide-react";
+import { useRouter } from "next/navigation";
 
+// Inside your component:
 export default function EmployeesList() {
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
     fetch("/api/employees")
@@ -48,10 +51,12 @@ export default function EmployeesList() {
             <tbody>
               {employees.length > 0 ? (
                 employees.map((employee) => (
-                  <tr key={employee._id} className="border-b">
+                  <tr key={employee._id}   className="border-b hover:bg-gray-50 cursor-pointer"
+                  onClick={() => router.push(`/employees/${employee._id}`)}
+                >
                     <td className="px-4 py-3">{employee.name}</td>
                     <td className="px-4 py-3">{employee.title}</td>
-                    <td className="px-4 py-3">{employee.email}</td>
+                    <td className="px-4 py-3 text-blue-600">{employee.email}</td>
                     <td className="px-4 py-3">${employee.salary}</td>
                     <td className="px-4 py-3">{new Date(employee.createdAt).toLocaleDateString()}</td>
                   </tr>

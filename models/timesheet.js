@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 const TimesheetSchema = new mongoose.Schema({
-  consultant: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  consultant: { type: mongoose.Schema.Types.ObjectId, ref: "Users", required: true },
   consultantEmail: { type: String, required: true }, 
   project: { type: mongoose.Schema.Types.ObjectId, ref: "Project", required: true },
   workType: { type: String, enum: ["Hours", "Days"], required: true },

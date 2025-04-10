@@ -27,7 +27,7 @@ import AdminRouteGuard from "@/components/AdminRouteGuard";
             <div className="flex h-screen">
        <aside className="w-[20%] h-screen bg-gray-300 fixed top-0 left-0">
                 <div className="h-full px-3 py-4 overflow-y-auto">
-                  <ul className="space-y-2 font-medium">
+                  <ul className="space-y-2 font-semibold">
                     <Sidebar />
                   </ul>
                 </div>

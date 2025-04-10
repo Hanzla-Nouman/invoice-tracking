@@ -1,15 +1,14 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { toast } from "react-hot-toast";
-import { Loader } from "lucide-react"; // For animated loader
+import { useRouter } from "next/navigation";
+import { Loader } from "lucide-react";
+import toast from "react-hot-toast";
 
 export default function AddCustomer() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-
-  const [form, setForm] = useState({
+  const [customer, setCustomer] = useState({
     fullName: "",
     email: "",
     phone: "",
@@ -19,130 +18,168 @@ export default function AddCustomer() {
     postalCode: "",
   });
 
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setCustomer(prev => ({ ...prev, [name]: value }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
-    const res = await fetch("/api/customers", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
-    });
+    try {
+      const res = await fetch("/api/customers", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(customer),
+      });
 
-    setLoading(false);
-    const data = await res.json();
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || "Failed to add customer");
+      }
 
-    if (res.ok) {
       toast.success("Customer added successfully!");
       router.push("/customers");
-      setForm({ fullName: "", email: "", phone: "", currency: "USD", country: "", status: "Active", postalCode: "" });
-    } else {
-      toast.error(data.message || "Failed to add customer.");
+      setCustomer({ 
+        fullName: "", 
+        email: "", 
+        phone: "", 
+        currency: "USD", 
+        country: "", 
+        status: "Active", 
+        postalCode: "" 
+      });
+    } catch (error) {
+      console.error("Error adding customer:", error);
+      toast.error(error.message || "Failed to add customer.");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="max-w-lg mx-auto mt-10 p-4 bg-white shadow-lg rounded-lg">
-      <h1 className="text-2xl font-bold mb-4">Add Customer</h1>
-      <form onSubmit={handleSubmit}>
-        <label className="block font-medium">Full Name:</label>
-        <input
-          type="text"
-          placeholder="John Doe"
-          value={form.fullName}
-          onChange={(e) => setForm({ ...form, fullName: e.target.value })}
-          className="w-full border p-2 rounded mt-1"
-          required
-        />
+    <div className="max-w-3xl mx-auto mt-10 p-6 bg-white shadow-lg rounded-lg">
+      <h1 className="text-2xl font-bold text-center mb-6">Add New Customer</h1>
 
-        <label className="block font-medium mt-2">Email:</label>
-        <input
-          type="email"
-          placeholder="johndoe@example.com"
-          value={form.email}
-          onChange={(e) => setForm({ ...form, email: e.target.value })}
-          className="w-full border p-2 rounded mt-1"
-          required
-        />
-
-        <label className="block font-medium mt-2">Phone:</label>
-        <input
-          type="text"
-          placeholder="+1 234 567 8900"
-          value={form.phone}
-          onChange={(e) => setForm({ ...form, phone: e.target.value })}
-          className="w-full border p-2 rounded mt-1"
-          required
-        />
-
-        {/* Country & Currency in same row */}
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block font-medium mt-2">Country:</label>
-            <input
-              type="text"
-              placeholder="United States"
-              value={form.country}
-              onChange={(e) => setForm({ ...form, country: e.target.value })}
-              className="w-full border p-2 rounded mt-1"
-              required
-            />
-          </div>
-          <div>
-            <label className="block font-medium mt-2">Currency:</label>
-            <select
-              value={form.currency}
-              onChange={(e) => setForm({ ...form, currency: e.target.value })}
-              className="w-full border p-2 rounded mt-1"
-            >
-              <option value="USD">USD ($)</option>
-              <option value="EUR">EUR (€)</option>
-              <option value="GBP">GBP (£)</option>
-              <option value="CAD">CAD (C$)</option>
-              <option value="AUD">AUD (A$)</option>
-            </select>
-          </div>
+      <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="col-span-2">
+          <label className="block text-gray-700">Full Name *</label>
+          <input
+            type="text"
+            name="fullName"
+            value={customer.fullName}
+            onChange={handleChange}
+            placeholder="John Doe"
+            className="w-full p-2 border rounded"
+            required
+            disabled={loading}
+          />
         </div>
 
-        {/* Postal Code & Status in same row */}
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block font-medium mt-2">Postal Code:</label>
-            <input
-              type="text"
-              placeholder="10001"
-              value={form.postalCode}
-              onChange={(e) => setForm({ ...form, postalCode: e.target.value })}
-              className="w-full border p-2 rounded mt-1"
-              required
-            />
-          </div>
-          <div>
-            <label className="block font-medium mt-2">Status:</label>
-            <select
-              value={form.status}
-              onChange={(e) => setForm({ ...form, status: e.target.value })}
-              className="w-full border p-2 rounded mt-1"
-            >
-              <option value="Active">Active</option>
-              <option value="Inactive">Inactive</option>
-            </select>
-          </div>
+        <div>
+          <label className="block text-gray-700">Email *</label>
+          <input
+            type="email"
+            name="email"
+            value={customer.email}
+            onChange={handleChange}
+            placeholder="john.doe@example.com"
+            className="w-full p-2 border rounded"
+            required
+            disabled={loading}
+          />
         </div>
 
-        <button
-          type="submit"
-          className="w-full mt-4 bg-blue-500 text-white p-2 rounded-lg flex items-center justify-center disabled:bg-blue-300"
-          disabled={loading}
-        >
-          {loading ? (
-            <>
-              <Loader className="animate-spin h-5 w-5 mr-2" />
-            </>
-          ) : (
-            "Add Customer"
-          )}
-        </button>
+        <div>
+          <label className="block text-gray-700">Phone *</label>
+          <input
+            type="text"
+            name="phone"
+            value={customer.phone}
+            onChange={handleChange}
+            placeholder="+1 (555) 123-4567"
+            className="w-full p-2 border rounded"
+            required
+            disabled={loading}
+          />
+        </div>
+
+        <div>
+          <label className="block text-gray-700">Country *</label>
+          <input
+            type="text"
+            name="country"
+            value={customer.country}
+            onChange={handleChange}
+            placeholder="United States"
+            className="w-full p-2 border rounded"
+            required
+            disabled={loading}
+          />
+        </div>
+
+        <div>
+          <label className="block text-gray-700">Currency *</label>
+          <select
+            name="currency"
+            value={customer.currency}
+            onChange={handleChange}
+            className="w-full p-2 border rounded"
+            required
+            disabled={loading}
+          >
+            <option value="USD">USD ($)</option>
+            <option value="EUR">EUR (€)</option>
+            <option value="GBP">GBP (£)</option>
+            <option value="CAD">CAD (C$)</option>
+            <option value="AUD">AUD (A$)</option>
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-gray-700">Postal Code *</label>
+          <input
+            type="text"
+            name="postalCode"
+            value={customer.postalCode}
+            onChange={handleChange}
+            placeholder="10001"
+            className="w-full p-2 border rounded"
+            required
+            disabled={loading}
+          />
+        </div>
+
+        <div>
+          <label className="block text-gray-700">Status *</label>
+          <select
+            name="status"
+            value={customer.status}
+            onChange={handleChange}
+            className="w-full p-2 border rounded"
+            required
+            disabled={loading}
+          >
+            <option value="Active">Active</option>
+            <option value="Inactive">Inactive</option>
+          </select>
+        </div>
+
+        <div className="col-span-2 flex justify-center">
+          <button
+            type="submit"
+            className="w-1/2 p-3 bg-blue-500 text-white rounded flex items-center justify-center hover:bg-blue-600 transition"
+            disabled={loading}
+          >
+            {loading ? (
+              <>
+                <Loader className="animate-spin mr-2" size={20} />
+                Adding Customer...
+              </>
+            ) : "Add Customer"}
+          </button>
+        </div>
       </form>
     </div>
   );

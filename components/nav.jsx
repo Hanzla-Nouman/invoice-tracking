@@ -24,22 +24,8 @@ export default function Navbar() {
         </a>
 
         <div className="flex items-center md:order-2 space-x-3 md:space-x-0 rtl:space-x-reverse">
-        {pathname === "/projects" && (
-        <button
-          onClick={() => router.push("/projects/add")}
-          className="bg-blue-500 mr-2 hover:bg-blue-600 text-white px-3 py-1 rounded"
-        >
-          Add Project
-        </button>
-      )}
-        {pathname === "/consultants" && (
-        <button
-          onClick={() => router.push("/consultants/add")}
-          className="bg-blue-500 mr-2 hover:bg-blue-600 text-white px-3 py-1 rounded"
-        >
-          Add Consultant
-        </button>
-      )}
+   
+    
           {session?.user &&
           <button
             type="button"

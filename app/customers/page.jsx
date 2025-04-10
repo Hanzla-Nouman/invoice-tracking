@@ -2,10 +2,12 @@
 
 import { Loader } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function CustomerList() {
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
     async function fetchCustomers() {
@@ -22,6 +24,10 @@ export default function CustomerList() {
 
     fetchCustomers();
   }, []);
+
+  const handleRowClick = (id) => {
+    router.push(`/customers/${id}`);
+  };
 
   return (
     <div className="max-w-4xl mx-auto mt-10 p-4 bg-white shadow-lg rounded-lg">
@@ -44,7 +50,11 @@ export default function CustomerList() {
           <tbody>
             {customers.length > 0 ? (
               customers.map((customer) => (
-                <tr key={customer._id} className="hover:cursor-pointer hover:bg-gray-200">
+                <tr 
+                  key={customer._id} 
+                  onClick={() => handleRowClick(customer._id)}
+                  className="hover:cursor-pointer hover:bg-gray-200"
+                >
                   <td className="border p-2">{customer.fullName}</td>
                   <td className="border p-2 text-blue-600 font-semibold">{customer.email}</td>
                   <td className="border p-2">{customer.phone}</td>

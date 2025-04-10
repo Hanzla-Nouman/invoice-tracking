@@ -194,7 +194,7 @@ const Sidebar = () => {
       aria-label="Sidebar"
     >
       <div className="h-full px-3 py-4 overflow-y-auto bg-gray-800 [-ms-overflow-style:none] [scrollbar-width:none] [-webkit-scrollbar]:hidden">
-        <ul className="space-y-2 font-medium overflow-y-hidden">
+        <ul className="space-y-2 font-semibold overflow-y-hidden">
           {menuItems.map((item) => {
             if (!item.visible) return null;
 

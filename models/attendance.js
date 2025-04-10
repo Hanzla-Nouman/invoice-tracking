@@ -10,11 +10,10 @@ const AttendanceSchema = new mongoose.Schema(
     date: {
       type: Date,
       required: true,
-      default: Date.now,
     },
     status: {
       type: String,
-      enum: ["Present", "Absent", "Late"],
+      enum: ["Present", "Absent", "Late", "Half-Day"],
       required: true,
     },
     notes: {
@@ -24,5 +23,8 @@ const AttendanceSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+// Prevent duplicate attendance for same employee on same day
+AttendanceSchema.index({ employee: 1, date: 1 }, { unique: true });
 
 export default mongoose.models.Attendance || mongoose.model("Attendance", AttendanceSchema);

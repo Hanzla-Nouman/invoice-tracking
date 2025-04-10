@@ -1,6 +1,6 @@
 import dbConnect from "@/lib/db";
 import Timesheet from "@/models/timesheet";
-import User from "@/models/user";
+import Users from "@/models/user";
 import Project from "@/models/project";
 import mongoose from "mongoose";
 import { NextResponse } from "next/server";
@@ -15,7 +15,7 @@ export async function POST(req) {
       return NextResponse.json({ message: "Consultant ID is required" }, { status: 400 });
     }
 
-    const consultantData = await User.findById(consultant);
+    const consultantData = await Users.findById(consultant);
     if (!consultantData || consultantData.role !== "Consultant") {
       return NextResponse.json({ message: "Only Consultants can submit timesheets" }, { status: 403 });
     }
