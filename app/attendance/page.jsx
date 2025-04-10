@@ -137,10 +137,10 @@ export default function AttendanceList() {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Employee</th>
-                  <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Notes</th>
-                  <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Employee</th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Notes</th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -149,7 +149,7 @@ export default function AttendanceList() {
                     <td className="px-4 py-3 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">{record.employee?.name}</div>
+                          <div className="text-sm font-semibold text-gray-900">{record.employee?.name}</div>
                         </div>
                       </div>
                     </td>
@@ -177,7 +177,7 @@ export default function AttendanceList() {
                             className="border p-1 rounded w-full text-sm"
                           />
                         </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-center text-sm font-medium">
+                        <td className="px-4 py-3 whitespace-nowrap text-center text-sm font-semibold">
                           <button
                             onClick={saveEdit}
                             className="text-green-600 hover:text-green-900 mr-4"
@@ -199,7 +199,7 @@ export default function AttendanceList() {
                     ) : (
                       <>
                         <td className="px-4 py-3 whitespace-nowrap text-center">
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${
                             record.status === "Present" ? "bg-green-100 text-green-800" :
                             record.status === "Absent" ? "bg-red-100 text-red-800" :
                             record.status === "Late" ? "bg-yellow-100 text-yellow-800" :
@@ -211,7 +211,7 @@ export default function AttendanceList() {
                         <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
                           {record.notes || "-"}
                         </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-center text-sm font-medium">
+                        <td className="px-4 py-3 whitespace-nowrap text-center text-sm font-semibold">
                           <button
                             onClick={() => startEdit(record)}
                             className="text-blue-600 hover:text-blue-900"
