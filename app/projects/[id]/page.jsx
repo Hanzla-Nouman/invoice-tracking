@@ -114,6 +114,7 @@ export default function ProjectDetails() {
       const updatedProject = await res.json();
       setProject(updatedProject);
       toast.success("Project updated successfully!");
+      router.push("/projects");
       setIsEditing(false);
     } catch (err) {
       console.error("Error updating project:", err);

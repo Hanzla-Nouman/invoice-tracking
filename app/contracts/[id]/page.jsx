@@ -115,6 +115,7 @@ export default function ContractDetails() {
       const updatedContract = await res.json();
       setContract(updatedContract);
       toast.success("Contract updated successfully!");
+      router.push("/contracts");
       setIsEditing(false);
     } catch (err) {
       console.error("Error updating contract:", err);

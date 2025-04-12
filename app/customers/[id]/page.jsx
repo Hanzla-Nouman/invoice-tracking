@@ -87,6 +87,7 @@ export default function CustomerDetails() {
       const updatedCustomer = await res.json();
       setCustomer(updatedCustomer);
       toast.success("Customer updated successfully!");
+      router.push("/customers");
       setIsEditing(false);
     } catch (err) {
       console.error("Error updating customer:", err);

@@ -83,6 +83,7 @@ export default function SupplierDetails() {
       const updatedSupplier = await res.json();
       setSupplier(updatedSupplier);
       toast.success("Supplier updated successfully!");
+      router.push("/suppliers");
       setIsEditing(false);
     } catch (err) {
       console.error("Error updating supplier:", err);

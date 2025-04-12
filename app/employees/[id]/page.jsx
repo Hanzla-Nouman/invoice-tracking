@@ -92,6 +92,7 @@ export default function EmployeeDetails() {
       const updatedEmployee = await res.json();
       setEmployee(updatedEmployee);
       toast.success("Employee updated successfully!");
+      router.push("/employees");
       setIsEditing(false);
     } catch (err) {
       console.error("Error updating employee:", err);

@@ -88,6 +88,7 @@ export default function OrderDetails() {
       const updatedOrder = await res.json();
       setOrder(updatedOrder);
       toast.success("Order updated successfully!");
+      router.push("/orders");
       setIsEditing(false);
     } catch (err) {
       console.error("Error updating order:", err);
