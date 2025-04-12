@@ -89,6 +89,7 @@ export default function ConsultantDetails() {
       const updatedConsultant = await res.json();
       setConsultant(updatedConsultant);
       toast.success("Consultant updated successfully!");
+      router.push('/consultants')
       setIsEditing(false);
     } catch (err) {
       console.error("Error updating consultant:", err);
