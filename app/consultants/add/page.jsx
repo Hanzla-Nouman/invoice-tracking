@@ -143,7 +143,35 @@ export default function AddConsultant() {
             <option value="Inactive">Inactive</option>
           </select>
         </div>
+        // app/add-consultant/page.js
+// Add these fields to the form
+<div>
+  <label className="block text-gray-700">Rate Per Hour ($)</label>
+  <input
+    type="number"
+    name="ratePerHour"
+    value={form.ratePerHour}
+    onChange={handleChange}
+    placeholder="50"
+    className="w-full p-2 border rounded"
+    step="0.01"
+    min="0"
+  />
+</div>
 
+<div>
+  <label className="block text-gray-700">Rate Per Day ($)</label>
+  <input
+    type="number"
+    name="ratePerDay"
+    value={form.ratePerDay}
+    onChange={handleChange}
+    placeholder="400"
+    className="w-full p-2 border rounded"
+    step="0.01"
+    min="0"
+  />
+</div>
         <div>
           <label className="block text-gray-700">Country</label>
           <input

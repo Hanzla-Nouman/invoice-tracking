@@ -4,18 +4,20 @@ const UserSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
     email: { type: String, unique: true, required: true },
-    password: { type: String, required: true }, // Hashed password
+    password: { type: String, required: true }, 
     role: { type: String, enum: ["Admin", "Consultant"], default: "Consultant" },
-    phone: { type: String }, // Optional contact phone number
-    yearsOfExperience: { type: Number }, // Number of years as consultant
-    bio: { type: String }, // Short bio/description
+    phone: { type: String },
+    yearsOfExperience: { type: Number },
+    bio: { type: String },
     status: { 
       type: String, 
       enum: ["Active", "On Leave", "Inactive"], 
       default: "Active" 
     },
-    country: { type: String }, // Optional
-    address: { type: String }, // Optional
+    country: { type: String }, 
+    address: { type: String }, 
+    ratePerHour: { type: Number, default: 0 },
+    ratePerDay: { type: Number, default: 0 },
   },
   { timestamps: true }
 );

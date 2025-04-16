@@ -50,7 +50,7 @@ export default function ProjectDetails() {
           endDate: formatDateForInput(projectData.endDate),
           status: projectData.status || "Draft",
           budget: projectData.budget || "",
-          assignedConsultants: projectData.assignedConsultants || []
+          assignedConsultants: projectData.assignedConsultants.map(c => c._id) // Store just the IDs
         });
 
         // Fetch available consultants
@@ -134,9 +134,10 @@ export default function ProjectDetails() {
 
   const handleConsultantToggle = (consultantId) => {
     setFormData(prev => {
-      const newConsultants = prev.assignedConsultants.includes(consultantId)
-        ? prev.assignedConsultants.filter(id => id !== consultantId)
-        : [...prev.assignedConsultants, consultantId];
+      const currentConsultants = prev.assignedConsultants || [];
+      const newConsultants = currentConsultants.includes(consultantId)
+        ? currentConsultants.filter(id => id !== consultantId)
+        : [...currentConsultants, consultantId];
       return { ...prev, assignedConsultants: newConsultants };
     });
   };
@@ -374,24 +375,24 @@ export default function ProjectDetails() {
               Assign Consultants
             </label>
             <div className="mt-2 space-y-2 max-h-60 overflow-y-auto p-2 border rounded">
-              {consultants.length > 0 ? (
-                consultants.map(consultant => (
-                  <div key={consultant._id} className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      id={`consultant-${consultant._id}`}
-                      checked={formData.assignedConsultants.includes(consultant._id)}
-                      onChange={() => handleConsultantToggle(consultant._id)}
-                      className="h-4 w-4"
-                    />
-                    <label htmlFor={`consultant-${consultant._id}`} className="flex-1">
-                      {consultant.name} ({consultant.email})
-                    </label>
-                  </div>
-                ))
-              ) : (
-                <p className="text-gray-500">No consultants available</p>
-              )}
+            {consultants.length > 0 ? (
+  consultants.map(consultant => (
+    <div key={consultant._id} className="flex items-center gap-2">
+      <input
+        type="checkbox"
+        id={`consultant-${consultant._id}`}
+        checked={formData.assignedConsultants?.includes(consultant._id)}
+        onChange={() => handleConsultantToggle(consultant._id)}
+        className="h-4 w-4"
+      />
+      <label htmlFor={`consultant-${consultant._id}`} className="flex-1">
+        {consultant.name} ({consultant.email})
+      </label>
+    </div>
+  ))
+) : (
+  <p className="text-gray-500">No consultants available</p>
+)}
             </div>
           </div>
           

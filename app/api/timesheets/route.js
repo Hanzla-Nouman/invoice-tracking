@@ -8,73 +8,121 @@ import { NextResponse } from "next/server";
 export async function POST(req) {
   try {
     await dbConnect();
-    const { consultant, consultantEmail, project, workType, workQuantity, notes } = await req.json();
+    const { consultant, project, workType, workQuantity, notes,consultantEmail, } = await req.json();
 
-
-    if (!consultant) {
-      return NextResponse.json({ message: "Consultant ID is required" }, { status: 400 });
+    // Validate required fields
+    if (!consultant || !project || !workType || !workQuantity) {
+      return NextResponse.json(
+        { message: "Missing required fields" },
+        { status: 400 }
+      );
     }
 
+    // Get current month/year range
+    const currentDate = new Date();
+    const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+    const lastDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+
+    // Check for existing timesheet this month
+    const existingTimesheet = await Timesheet.findOne({
+      consultant,
+      dateIssued: { $gte: firstDayOfMonth, $lte: lastDayOfMonth }
+    });
+
+    if (existingTimesheet) {
+      return NextResponse.json(
+        { message: "You already have a timesheet for this month" },
+        { status: 400 }
+      );
+    }
+
+    // Get consultant's rates
     const consultantData = await Users.findById(consultant);
-    if (!consultantData || consultantData.role !== "Consultant") {
-      return NextResponse.json({ message: "Only Consultants can submit timesheets" }, { status: 403 });
+    if (!consultantData) {
+      return NextResponse.json(
+        { message: "Consultant not found" },
+        { status: 404 }
+      );
     }
 
-    // ✅ Convert project to ObjectId before saving
-    const projectObjectId = mongoose.Types.ObjectId.isValid(project) ? new mongoose.Types.ObjectId(project) : null;
-    if (!projectObjectId) {
-      return NextResponse.json({ message: "Invalid Project ID" }, { status: 400 });
-    }
+    const rate = workType === "Hours" 
+      ? consultantData.ratePerHour 
+      : consultantData.ratePerDay;
+    const totalAmount = workQuantity * rate;
+    const monthYear = currentDate.toLocaleString('default', { 
+      month: 'long', 
+      year: 'numeric' 
+    });
 
-
+    // Create new timesheet
     const newTimesheet = new Timesheet({
       consultant,
-      consultantEmail,
-      project: projectObjectId, // ✅ Always store ObjectId
+      project,
       workType,
       workQuantity,
-      dateIssued: new Date().toISOString().split("T")[0],
+      consultantEmail,
+      rate,
+      totalAmount,
+      monthYear,
+      dateIssued: currentDate,
       notes,
+      status: "Pending",
+      paymentStatus: "Pending"
     });
 
     await newTimesheet.save();
-    return NextResponse.json({ message: "Timesheet submitted successfully!" }, { status: 201 });
 
+    return NextResponse.json(
+      { 
+        message: "Monthly timesheet submitted successfully!",
+        timesheet: newTimesheet
+      },
+      { status: 201 }
+    );
   } catch (error) {
     console.error("Timesheet submission error:", error);
-    return NextResponse.json({ message: "Server error", error: error.message }, { status: 500 });
+    return NextResponse.json(
+      { message: "Server error", error: error.message },
+      { status: 500 }
+    );
   }
 }
 
+// GET, PUT, and other methods remain the same as before
 export async function GET(req) {
   try {
     await dbConnect();
 
     const { searchParams } = new URL(req.url);
-    const userId = searchParams.get("userId"); // Logged-in user ID
-    const userRole = searchParams.get("role"); // "Admin" or "Consultant"
+    const userId = searchParams.get("userId");
+    const userRole = searchParams.get("role");
 
     let timesheets;
 
     if (userRole === "Admin") {
-      // ✅ Admin sees all timesheets
       timesheets = await Timesheet.find()
         .populate("consultant", "name email")
         .populate("project", "name")
-        .lean(); // Converts MongoDB objects to plain JSON
+        .lean();
     } else if (userRole === "Consultant" && userId) {
-      // ✅ Consultant sees only their own timesheets
       timesheets = await Timesheet.find({ consultant: userId })
         .populate("project", "name")
         .lean();
     } else {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 403 });
+      return NextResponse.json(
+        { message: "Unauthorized" }, 
+        { status: 403 }
+      );
     }
 
     return NextResponse.json(timesheets, { status: 200 });
-
   } catch (error) {
     console.error("Error fetching timesheets:", error);
-    return NextResponse.json({ message: "Server error", error: error.message }, { status: 500 });
+    return NextResponse.json(
+      { message: "Server error", error: error.message },
+      { status: 500 }
+    );
   }
 }
+
+// ... PUT and other methods remain unchanged ...

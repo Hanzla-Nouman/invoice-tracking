@@ -1,5 +1,6 @@
 import dbConnect from "@/lib/db";
 import Project from "@/models/project";
+import Users from "@/models/user";
 import { NextResponse } from "next/server";
 
 export async function GET(req, { params }) {
@@ -14,6 +15,11 @@ export async function GET(req, { params }) {
         { message: "Project not found" }, 
         { status: 404 }
       );
+    }
+
+    // Ensure assignedConsultants is always an array
+    if (!project.assignedConsultants) {
+      project.assignedConsultants = [];
     }
 
     return NextResponse.json(project, { status: 200 });
@@ -48,15 +54,21 @@ export async function PUT(req, { params }) {
       );
     }
 
+    // Validate consultants exist
+    const validConsultants = await Users.find({
+      _id: { $in: data.assignedConsultants || [] },
+      role: "Consultant"
+    });
+    const validConsultantIds = validConsultants.map(c => c._id);
+
     const updateData = {
       name: data.name,
       description: data.description,
       startDate: data.startDate,
       endDate: data.endDate,
-      assignedConsultants: data.assignedConsultants,
-      // Add these fields to be updated
       status: data.status,
-      budget: data.budget ? parseFloat(data.budget) : 0
+      budget: data.budget ? parseFloat(data.budget) : 0,
+      assignedConsultants: validConsultantIds
     };
 
     const updatedProject = await Project.findByIdAndUpdate(

@@ -42,7 +42,9 @@ export async function PUT(req, { params }) {
           bio: data.bio,
           status: data.status,
           country: data.country,
-          address: data.address
+          address: data.address,
+          ratePerHour: data.ratePerHour,  // Add this
+          ratePerDay: data.ratePerDay      
         }
       },
       { new: true }

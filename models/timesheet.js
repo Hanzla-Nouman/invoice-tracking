@@ -10,7 +10,11 @@ const TimesheetSchema = new mongoose.Schema({
   totalAmount: { type: Number, default: 0 },
   paymentStatus: { type: String, enum: ["Pending", "Paid"], default: "Pending" },
   status: { type: String, enum: ["Pending", "Approved", "Rejected"], default: "Pending" },
-  dateIssued: { type: Date, required: true }, 
+  dateIssued: { 
+    type: Date, 
+    required: true,
+    default: Date.now 
+  },
   notes: { type: String },
 }, { timestamps: true });
 

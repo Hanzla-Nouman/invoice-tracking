@@ -50,7 +50,9 @@ export async function POST(req) {
       bio: formData.bio || "",
       status: formData.status || "Active",
       country: formData.country || "",
-      address: formData.address || ""
+      address: formData.address || "",
+      ratePerHour: formData.ratePerHour || 0,  // Add this line
+      ratePerDay: formData.ratePerDay || 0 
     });
 
     await newConsultant.save();

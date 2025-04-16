@@ -5,11 +5,13 @@ import { useSession } from "next-auth/react";
 import toast from "react-hot-toast";
 import { Loader } from "lucide-react";
 import { MdCancel } from "react-icons/md";
-import { FaEdit } from "react-icons/fa";
-import { FaSave } from "react-icons/fa";
+import { FaEdit, FaSave } from "react-icons/fa";
+
 export default function Timesheet() {
   const { data: session } = useSession();
   const [timesheets, setTimesheets] = useState([]);
+  const [consultants, setConsultants] = useState([]);
+  const [selectedConsultant, setSelectedConsultant] = useState("");
   const [editedTimesheets, setEditedTimesheets] = useState({});
   const [editingIds, setEditingIds] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -21,28 +23,41 @@ export default function Timesheet() {
   useEffect(() => {
     if (!role || !userId) return;
     
-    const fetchTimesheets = async () => {
+    const fetchData = async () => {
       setLoading(true);
       try {
-        const res = await fetch(`/api/timesheets?userId=${userId}&role=${role}`);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data = await res.json();
+        // Fetch consultants if admin
+        if (role === "Admin") {
+          const consultantsRes = await fetch("/api/consultants");
+          if (consultantsRes.ok) {
+            const consultantsData = await consultantsRes.json();
+            setConsultants(consultantsData);
+          }
+        }
+
+        // Fetch timesheets
+        const timesheetsRes = await fetch(
+          `/api/timesheets?userId=${userId}&role=${role}`
+        );
         
-        // Sort timesheets by createdAt date (newest first)
-        const sortedTimesheets = data.sort((a, b) => 
+        if (!timesheetsRes.ok) throw new Error(`HTTP ${timesheetsRes.status}`);
+        
+        const timesheetsData = await timesheetsRes.json();
+        const sortedTimesheets = timesheetsData.sort((a, b) => 
           new Date(b.createdAt) - new Date(a.createdAt)
         );
         
         setTimesheets(sortedTimesheets);
       } catch (err) {
-        console.error("Error fetching timesheets:", err);
-        setError("Failed to load timesheets. Please try again later.");
-        toast.error("Failed to load timesheets");
+        console.error("Error fetching data:", err);
+        setError("Failed to load data. Please try again later.");
+        toast.error("Failed to load data");
       } finally {
         setLoading(false);
       }
     };
-    fetchTimesheets();
+    
+    fetchData();
   }, [role, userId]);
 
   const toggleEdit = (id) => {
@@ -82,13 +97,15 @@ export default function Timesheet() {
         return toast.error("Timesheet not found");
       }
 
-      const totalAmount = (updatedFields.workQuantity ?? existingTimesheet.workQuantity) * 
-                        (updatedFields.rate ?? existingTimesheet.rate);
+      // Recalculate total if quantity or rate changed
+      const workQuantity = updatedFields.workQuantity ?? existingTimesheet.workQuantity;
+      const rate = updatedFields.rate ?? existingTimesheet.rate;
+      const totalAmount = workQuantity * rate;
 
       const payload = {
         ...updatedFields,
         totalAmount,
-        ...(role === "Consultant" && { status: "Pending" }),
+        ...(role === "Consultant" && { status: "Pending" }), // Reset status if consultant edits
       };
 
       const res = await fetch(`/api/timesheets/${id}`, {
@@ -121,10 +138,14 @@ export default function Timesheet() {
     }
   };
 
+  const filteredTimesheets = selectedConsultant
+    ? timesheets.filter(t => t.consultant._id === selectedConsultant)
+    : timesheets;
+
   if (loading) return (
     <div className="flex justify-center py-20">
-    <Loader className="animate-spin w-10 h-10 text-gray-600" />
-  </div>
+      <Loader className="animate-spin w-10 h-10 text-gray-600" />
+    </div>
   );
 
   if (error) return (
@@ -147,9 +168,27 @@ export default function Timesheet() {
         {role === "Admin" ? "Admin Timesheet Management" : "Your Timesheets"}
       </h1>
       
-      {timesheets.length === 0 ? (
+      {role === "Admin" && (
+        <div className="mb-6">
+          <label className="block font-medium mb-2">Filter by Consultant:</label>
+          <select
+            value={selectedConsultant}
+            onChange={(e) => setSelectedConsultant(e.target.value)}
+            className="w-full md:w-1/3 p-2 border rounded"
+          >
+            <option value="">All Consultants</option>
+            {consultants.map((c) => (
+              <option key={c._id} value={c._id}>{c.name}</option>
+            ))}
+          </select>
+        </div>
+      )}
+      
+      {filteredTimesheets.length === 0 ? (
         <div className="text-center py-10">
-          <p className="text-gray-500 text-lg">No timesheets found</p>
+          <p className="text-gray-500 text-lg">
+            {selectedConsultant ? "No timesheets found for this consultant" : "No timesheets found"}
+          </p>
         </div>
       ) : (
         <div className="overflow-x-auto">
@@ -157,6 +196,7 @@ export default function Timesheet() {
             <thead>
               <tr className="bg-gray-100">
                 {role === "Admin" && <th className="p-2 text-left border-b">Consultant</th>}
+                <th className="p-2 text-left border-b">Month</th>
                 <th className="p-2 text-left border-b">Project</th>
                 <th className="p-2 text-left border-b">Type</th>
                 <th className="p-2 text-left border-b">Quantity</th>
@@ -164,16 +204,19 @@ export default function Timesheet() {
                 <th className="p-2 text-left border-b">Total</th>
                 <th className="p-2 text-left border-b">Status</th>
                 <th className="p-2 text-left border-b">Payment</th>
-
                 <th className="p-2 text-left border-b">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {timesheets.map((t) => (
+              {filteredTimesheets.map((t) => (
                 <tr key={t._id} className="border-b hover:bg-gray-50">
                   {role === "Admin" && (
                     <td className="p-2 text-blue-600">{t.consultant?.name || "Unknown"}</td>
                   )}
+                  <td className="p-2">  {t.monthYear || new Date(t.dateIssued).toLocaleString('default', { 
+    month: 'long', 
+    year: 'numeric' 
+  })}</td>
                   <td className="p-2">{t.project?.name || "No Project"}</td>
                   <td className="p-2">{t.workType}</td>
 
@@ -182,7 +225,7 @@ export default function Timesheet() {
                       <input
                         type="number"
                         min="0"
-                        step="0.1"
+                        step="1"
                         className="w-20 p-1 border rounded focus:ring-2 focus:ring-blue-300"
                         value={editedTimesheets[t._id]?.workQuantity ?? t.workQuantity ?? ""}
                         onChange={(e) => 
@@ -212,11 +255,11 @@ export default function Timesheet() {
                   </td>
 
                   <td className="p-2 font-bold">
-  ${(
-    ((editedTimesheets[t._id]?.workQuantity ?? t.workQuantity) || 0) * 
-    ((editedTimesheets[t._id]?.rate ?? t.rate) || 0)
-  ).toFixed(2)}
-</td>
+                    ${(
+                      ((editedTimesheets[t._id]?.workQuantity ?? t.workQuantity) || 0) * 
+                      ((editedTimesheets[t._id]?.rate ?? t.rate) || 0)
+                    ).toFixed(2)}
+                  </td>
 
                   <td className="p-2">
                     {editingIds.includes(t._id) && role === "Admin" ? (
@@ -259,7 +302,6 @@ export default function Timesheet() {
                       </span>
                     )}
                   </td>
-             
 
                   <td className="p-2">
                     <div className="flex space-x-2">
@@ -274,13 +316,13 @@ export default function Timesheet() {
                                 : "bg-gray-300 cursor-not-allowed"
                             }`}
                           >
-                          <FaSave size={20}/>
+                            <FaSave size={20}/>
                           </button>
                           <button
                             onClick={() => toggleEdit(t._id)}
                             className="p-1 bg-gray-500 text-white rounded hover:bg-gray-600"
                           >
-                              <MdCancel size={20}/>
+                            <MdCancel size={20}/>
                           </button>
                         </>
                       ) : (
@@ -288,7 +330,7 @@ export default function Timesheet() {
                           onClick={() => toggleEdit(t._id)}
                           className="p-1 bg-blue-500 text-white rounded hover:bg-blue-600"
                         >
-                            <FaEdit size={20}/>
+                          <FaEdit size={20}/>
                         </button>
                       )}
                     </div>
