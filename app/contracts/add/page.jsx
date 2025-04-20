@@ -15,7 +15,7 @@ export default function AddContractPage() {
   const [contract, setContract] = useState({
     title: "",
     description: "",
-    consultant: "",
+    consultants: [], // Changed from consultant to consultants (array)
     customer: "",
     startDate: "",
     endDate: "",
@@ -55,7 +55,16 @@ export default function AddContractPage() {
     const { name, value } = e.target;
     setContract(prev => ({ ...prev, [name]: value }));
   };
-
+  const handleConsultantChange = (e) => {
+    const options = e.target.options;
+    const selectedConsultants = [];
+    for (let i = 0; i < options.length; i++) {
+      if (options[i].selected) {
+        selectedConsultants.push(options[i].value);
+      }
+    }
+    setContract(prev => ({ ...prev, consultants: selectedConsultants }));
+  };
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -157,25 +166,26 @@ export default function AddContractPage() {
         </div>
 
         <div>
-          <label className="block text-gray-700">Consultant *</label>
-          <select
-            name="consultant"
-            value={contract.consultant}
-            onChange={handleChange}
-            className="w-full p-2 border rounded"
-            required
-            disabled={loading || dataLoading}
-          >
-            <option value="">Select Consultant</option>
-            {dataLoading ? (
-              <option disabled>Loading consultants...</option>
-            ) : consultants.map((c) => (
-              <option key={c._id} value={c._id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
-        </div>
+  <label className="block text-gray-700">Consultants *</label>
+  <select
+    name="consultants"
+    multiple
+    value={contract.consultants}
+    onChange={handleConsultantChange}
+    className="w-full p-2 border rounded h-auto min-h-[42px]"
+    required
+    disabled={loading || dataLoading}
+  >
+    {dataLoading ? (
+      <option disabled>Loading consultants...</option>
+    ) : consultants.map((c) => (
+      <option key={c._id} value={c._id}>
+        {c.name}
+      </option>
+    ))}
+  </select>
+  <p className="text-sm text-gray-500 mt-1">Hold Ctrl/Cmd to select multiple</p>
+</div>
 
         <div>
           <label className="block text-gray-700">Customer *</label>
@@ -286,3 +296,5 @@ export default function AddContractPage() {
     </div>
   );
 }
+
+

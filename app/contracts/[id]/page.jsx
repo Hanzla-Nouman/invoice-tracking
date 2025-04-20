@@ -15,7 +15,7 @@ export default function ContractDetails() {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
-    consultant: "",
+    consultants: [], // Changed to array
     customer: "",
     startDate: "",
     endDate: "",
@@ -125,14 +125,20 @@ export default function ContractDetails() {
     }
   };
 
+  const handleConsultantChange = (e) => {
+    const options = e.target.options;
+    const selectedConsultants = [];
+    for (let i = 0; i < options.length; i++) {
+      if (options[i].selected) {
+        selectedConsultants.push(options[i].value);
+      }
+    }
+    setFormData(prev => ({ ...prev, consultants: selectedConsultants }));
+  };
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
-
   if (loading) return (
     <div className="flex justify-center py-20">
       <Loader className="animate-spin w-10 h-10 text-gray-600" />
@@ -213,9 +219,19 @@ export default function ContractDetails() {
               <p className="mt-1 text-lg">{contract.description || "N/A"}</p>
             </div>
             <div>
-              <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">Consultant</h3>
-              <p className="mt-1 text-lg">{contract.consultant?.name || "N/A"}</p>
-            </div>
+  <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">Consultants</h3>
+  <div className="mt-1">
+    {contract.consultants?.length > 0 ? (
+      <ul className="list-disc list-inside">
+        {contract.consultants.map((c, index) => (
+          <li key={index}>{typeof c === 'object' ? c.name : consultants.find(cons => cons._id === c)?.name || 'Unknown'}</li>
+        ))}
+      </ul>
+    ) : (
+      <p className="text-lg">N/A</p>
+    )}
+  </div>
+</div>
             <div>
               <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">Customer</h3>
               <p className="mt-1 text-lg">{contract.customer?.fullName || "N/A"}</p>
@@ -288,22 +304,23 @@ export default function ContractDetails() {
               />
             </div>
             <div>
-              <label className="block text-sm font-bold text-gray-700 uppercase tracking-wider">
-                Consultant *
-              </label>
-              <select
-                name="consultant"
-                value={formData.consultant}
-                onChange={handleChange}
-                className="w-full p-2 border rounded mt-1"
-                required
-              >
-                <option value="">Select Consultant</option>
-                {consultants.map((c) => (
-                  <option key={c._id} value={c._id}>{c.name}</option>
-                ))}
-              </select>
-            </div>
+  <label className="block text-sm font-bold text-gray-700 uppercase tracking-wider">
+    Consultants *
+  </label>
+  <select
+    name="consultants"
+    multiple
+    value={formData.consultants}
+    onChange={handleConsultantChange}
+    className="w-full p-2 border rounded mt-1 h-auto min-h-[42px]"
+    required
+  >
+    {consultants.map((c) => (
+      <option key={c._id} value={c._id}>{c.name}</option>
+    ))}
+  </select>
+  <p className="text-sm text-gray-500 mt-1">Hold Ctrl/Cmd to select multiple</p>
+</div>
             <div>
               <label className="block text-sm font-bold text-gray-700 uppercase tracking-wider">
                 Customer *

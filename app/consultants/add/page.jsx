@@ -15,7 +15,11 @@ export default function AddConsultant() {
     bio: "",
     status: "Active",
     country: "",
-    address: ""
+    address: "",
+    ratePerHour: 0,
+    ratePerDay: 0,
+    baseSalary: 0,
+    insuranceAmount: 0,
   });
   
   const [loading, setLoading] = useState(false);
@@ -143,8 +147,35 @@ export default function AddConsultant() {
             <option value="Inactive">Inactive</option>
           </select>
         </div>
-        // app/add-consultant/page.js
-// Add these fields to the form
+        <div>
+  <label className="block text-gray-700">Base Salary ($)</label>
+  <input
+    type="number"
+    name="baseSalary"
+    value={form.baseSalary}
+    onChange={handleChange}
+    placeholder="3000"
+    className="w-full p-2 border rounded"
+    step="0.01"
+    min="0"
+  />
+</div>
+
+<div>
+  <label className="block text-gray-700">Insurance Amount ($)</label>
+  <input
+    type="number"
+    name="insuranceAmount"
+    value={form.insuranceAmount}
+    onChange={handleChange}
+    placeholder="500"
+    className="w-full p-2 border rounded"
+    step="0.01"
+    min="0"
+  />
+</div>
+
+
 <div>
   <label className="block text-gray-700">Rate Per Hour ($)</label>
   <input

@@ -4,7 +4,11 @@ const contractSchema = new mongoose.Schema(
   {
     title: { type: String, required: true },
     description: { type: String },
-    consultant: { type: mongoose.Schema.Types.ObjectId, ref: "Users", required: true },
+    consultants: [{ 
+      type: mongoose.Schema.Types.ObjectId, 
+      ref: "Users", 
+      required: true 
+    }],
     customer: { type: mongoose.Schema.Types.ObjectId, ref: "Customer", required: true },
     startDate: { type: Date, required: true },
     endDate: { type: Date, required: true },

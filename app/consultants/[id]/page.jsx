@@ -43,7 +43,9 @@ export default function ConsultantDetails() {
           country: data.country || "",
           address: data.address || "",
           ratePerHour: data.ratePerHour || 0,  // Add this
-          ratePerDay: data.ratePerDay || 0 
+          ratePerDay: data.ratePerDay || 0 ,
+          insuranceAmount: data.insuranceAmount || 0,  // Add this
+          baseSalary: data.baseSalary || 0 
         });
         setLoading(false);
       } catch (err) {
@@ -190,6 +192,14 @@ export default function ConsultantDetails() {
               <p className="mt-1 text-lg">{consultant.email}</p>
             </div>
             <div>
+  <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">Base Salary</h3>
+  <p className="mt-1 text-lg">${consultant.baseSalary?.toFixed(2) || "0.00"}</p>
+</div>
+
+
+
+
+            <div>
     <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">Rate Per Hour</h3>
     <p className="mt-1 text-lg">${consultant.ratePerHour?.toFixed(2) || "0.00"}</p>
   </div>
@@ -223,6 +233,10 @@ export default function ConsultantDetails() {
                 {consultant.yearsOfExperience ? `${consultant.yearsOfExperience} years` : "-"}
               </p>
             </div>
+            <div>
+  <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">Insurance</h3>
+  <p className="mt-1 text-lg">${consultant.insuranceAmount?.toFixed(2) || "0.00"}</p>
+</div>
             <div>
     <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">Rate Per Day</h3>
     <p className="mt-1 text-lg">${consultant.ratePerDay?.toFixed(2) || "0.00"}</p>
@@ -269,6 +283,20 @@ export default function ConsultantDetails() {
                 required
               />
             </div>
+            <div>
+  <label className="block text-sm font-bold text-gray-700 uppercase tracking-wider">
+    Insurance Amount ($)
+  </label>
+  <input
+    type="number"
+    name="insuranceAmount"
+    value={formData.insuranceAmount}
+    onChange={handleChange}
+    className="w-full p-2 border rounded mt-1"
+    step="0.01"
+    min="0"
+  />
+</div>
   <div>
     <label className="block text-sm font-bold text-gray-700 uppercase tracking-wider">
       Rate Per Hour ($)
@@ -354,6 +382,24 @@ export default function ConsultantDetails() {
       min="0"
     />
   </div>
+  <div>
+  <label className="block text-sm font-bold text-gray-700 uppercase tracking-wider">
+    Base Salary ($)
+  </label>
+  <input
+    type="number"
+    name="baseSalary"
+    value={formData.baseSalary}
+    onChange={handleChange}
+    className="w-full p-2 border rounded mt-1"
+    step="0.01"
+    min="0"
+  />
+</div>
+
+
+
+
             <div>
               <label className="block text-sm font-bold text-gray-700 uppercase tracking-wider">
                 Address

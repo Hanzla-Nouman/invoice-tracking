@@ -18,9 +18,12 @@ const UserSchema = new mongoose.Schema(
     address: { type: String }, 
     ratePerHour: { type: Number, default: 0 },
     ratePerDay: { type: Number, default: 0 },
+    // Add these new fields
+    baseSalary: { type: Number, default: 0 },          // Monthly base salary
+    insuranceAmount: { type: Number, default: 0 },     // Monthly insurance amount
+
   },
   { timestamps: true }
 );
-
 const Users = mongoose.models.Users || mongoose.model("Users", UserSchema);
 export default Users;

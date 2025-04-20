@@ -44,7 +44,9 @@ export async function PUT(req, { params }) {
           country: data.country,
           address: data.address,
           ratePerHour: data.ratePerHour,  // Add this
-          ratePerDay: data.ratePerDay      
+          ratePerDay: data.ratePerDay   ,
+          insuranceAmount: data.insuranceAmount,
+          baseSalary: data.baseSalary,
         }
       },
       { new: true }

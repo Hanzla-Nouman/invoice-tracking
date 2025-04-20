@@ -7,8 +7,8 @@ export async function GET(req, { params }) {
     await dbConnect();
     
     const contract = await Contract.findById(params.id)
-      .populate("customer", "fullName email phone")
-      .populate("consultant", "name email");
+    .populate("customer", "fullName email phone")
+    .populate("consultants", "name email"); 
     
     if (!contract) {
       return NextResponse.json({ message: "Contract not found" }, { status: 404 });
@@ -34,7 +34,9 @@ export async function PUT(req, { params }) {
         params.id,
         { $set: data },
         { new: true }
-      ).populate("customer", "fullName").populate("consultant", "name");
+      )
+      .populate("customer", "fullName")
+      .populate("consultants", "name"); 
       
       if (!updatedContract) {
         return NextResponse.json({ message: "Contract not found" }, { status: 404 });

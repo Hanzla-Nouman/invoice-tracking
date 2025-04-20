@@ -51,8 +51,10 @@ export async function POST(req) {
       status: formData.status || "Active",
       country: formData.country || "",
       address: formData.address || "",
-      ratePerHour: formData.ratePerHour || 0,  // Add this line
-      ratePerDay: formData.ratePerDay || 0 
+      ratePerHour: formData.ratePerHour || 0,
+      ratePerDay: formData.ratePerDay || 0,
+      baseSalary: formData.baseSalary || 0,
+      insuranceAmount: formData.insuranceAmount || 0,
     });
 
     await newConsultant.save();
