@@ -8,7 +8,6 @@ import { GoSignIn } from "react-icons/go";
 import { MdAccountBalance, MdContactSupport, MdManageAccounts, MdSpaceDashboard } from "react-icons/md";
 import { FaAngleDown, FaAngleUp, FaRegCalendarAlt, FaSellsy, FaProjectDiagram, FaFileContract } from "react-icons/fa";
 import { IoPeopleSharp } from "react-icons/io5";
-import { SiGoogleadsense } from "react-icons/si";
 import { HiCube } from "react-icons/hi";
 import { IoDocuments } from "react-icons/io5";
 const Sidebar = () => {
@@ -24,7 +23,6 @@ const Sidebar = () => {
     accounting: false,
     consultant: false,
     hrm: false,
-    leads: false,
     contract: false,
     support: false,
     supplier: false,
@@ -135,16 +133,6 @@ const Sidebar = () => {
         { label: "Add Employee", path: "/employees/add" },
         { label: "Attendance", path: "/attendance" },
         { label: "Mark Attendance", path: "/attendance/mark" },
-      ]
-    },
-    {
-      id: "leads",
-      label: "Leads",
-      icon: <SiGoogleadsense size={20} />,
-      visible: true,
-      subItems: [
-        { label: "List Leads", path: "/leads" },
-        { label: "Add Lead", path: "/leads/add" }
       ]
     },
     {

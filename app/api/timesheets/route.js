@@ -1,42 +1,31 @@
 import dbConnect from "@/lib/db";
 import Timesheet from "@/models/timesheet";
+import Contract from "@/models/contract";
 import Users from "@/models/user";
-import Project from "@/models/project";
-import mongoose from "mongoose";
+import MonthlySummary from "@/models/MonthlySummary";
 import { NextResponse } from "next/server";
 
 export async function POST(req) {
   try {
     await dbConnect();
-    const { consultant, project, workType, workQuantity, notes,consultantEmail, } = await req.json();
+    const { 
+      consultant,
+      consultantEmail,
+      contract,
+      workType,
+      workQuantity,
+      notes,
+      monthYear
+    } = await req.json();
 
-    // Validate required fields
-    if (!consultant || !project || !workType || !workQuantity) {
+    if (!consultant || !contract || !workType || !workQuantity || !monthYear) {
       return NextResponse.json(
         { message: "Missing required fields" },
         { status: 400 }
       );
     }
 
-    // Get current month/year range
-    const currentDate = new Date();
-    const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-    const lastDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
-
-    // Check for existing timesheet this month
-    const existingTimesheet = await Timesheet.findOne({
-      consultant,
-      dateIssued: { $gte: firstDayOfMonth, $lte: lastDayOfMonth }
-    });
-
-    if (existingTimesheet) {
-      return NextResponse.json(
-        { message: "You already have a timesheet for this month" },
-        { status: 400 }
-      );
-    }
-
-    // Get consultant's rates
+    // Get consultant details
     const consultantData = await Users.findById(consultant);
     if (!consultantData) {
       return NextResponse.json(
@@ -45,37 +34,102 @@ export async function POST(req) {
       );
     }
 
-    const rate = workType === "Hours" 
-      ? consultantData.ratePerHour 
-      : consultantData.ratePerDay;
-    const totalAmount = workQuantity * rate;
-    const monthYear = currentDate.toLocaleString('default', { 
-      month: 'long', 
-      year: 'numeric' 
+    const contractData = await Contract.findById(contract)
+      .populate("customer", "fullName");
+    
+    if (!contractData) {
+      return NextResponse.json(
+        { message: "Contract not found" },
+        { status: 404 }
+      );
+    }
+  
+    if (!contractData.consultants.includes(consultant)) {
+      return NextResponse.json(
+        { message: "You are not assigned to this contract" },
+        { status: 403 }
+      );
+    }
+
+    const existingTimesheet = await Timesheet.findOne({
+      consultant,
+      contract,
+      monthYear
     });
+
+    if (existingTimesheet) {
+      return NextResponse.json(
+        { message: "Timesheet already exists for this contract and month" },
+        { status: 400 }
+      );
+    }
+
+    // Calculate rate based on consultant's rates
+    let rate;
+    if (workType === "Hours") {
+      rate = consultantData.ratePerHour || 0;
+    } else {
+      rate = consultantData.ratePerDay || 0;
+    }
+
+    const totalAmount = workQuantity * rate;
 
     // Create new timesheet
     const newTimesheet = new Timesheet({
       consultant,
-      project,
+      consultantEmail,
+      contract,
+      customer: contractData.customer._id,
       workType,
       workQuantity,
-      consultantEmail,
       rate,
       totalAmount,
       monthYear,
-      dateIssued: currentDate,
       notes,
       status: "Pending",
       paymentStatus: "Pending"
     });
 
+    // Save the timesheet first
     await newTimesheet.save();
+
+    // Now handle the MonthlySummary
+    let monthlySummary = await MonthlySummary.findOne({
+      consultant,
+      monthYear
+    });
+
+    if (!monthlySummary) {
+      // Create new MonthlySummary if it doesn't exist
+      monthlySummary = new MonthlySummary({
+        consultant,
+        consultantName: consultantData.name,
+        monthYear,
+        Timesheets: [newTimesheet._id],
+        totalApprovedAmount: totalAmount,
+        baseSalary: consultantData.baseSalary || 0,
+        insuranceAmount: consultantData.insuranceAmount || 0,
+        remainingBalance: totalAmount - (consultantData.baseSalary || 0) - (consultantData.insuranceAmount || 0),
+        paymentStatus: "Pending"
+      });
+    } else {
+      // Update existing MonthlySummary
+      monthlySummary.Timesheets.push(newTimesheet._id);
+      monthlySummary.totalApprovedAmount += totalAmount;
+      monthlySummary.remainingBalance = 
+        monthlySummary.totalApprovedAmount - 
+        monthlySummary.baseSalary - 
+        monthlySummary.insuranceAmount;
+    }
+
+    // Save the MonthlySummary
+    await monthlySummary.save();
 
     return NextResponse.json(
       { 
-        message: "Monthly timesheet submitted successfully!",
-        timesheet: newTimesheet
+        message: "Timesheet submitted successfully!",
+        timesheet: newTimesheet,
+        monthlySummary
       },
       { status: 201 }
     );
@@ -88,7 +142,8 @@ export async function POST(req) {
   }
 }
 
-// GET, PUT, and other methods remain the same as before
+// ... rest of your code remains the same
+
 export async function GET(req) {
   try {
     await dbConnect();
@@ -101,12 +156,17 @@ export async function GET(req) {
 
     if (userRole === "Admin") {
       timesheets = await Timesheet.find()
-        .populate("consultant", "name email")
-        .populate("project", "name")
-        .lean();
+      .populate({
+        path: "consultant",
+        model: "Users", 
+        select: "name email baseSalary insuranceAmount"
+      })
+      .populate("contract", "title") 
+      .lean();
+        
     } else if (userRole === "Consultant" && userId) {
       timesheets = await Timesheet.find({ consultant: userId })
-        .populate("project", "name")
+        .populate("contract", "title")
         .lean();
     } else {
       return NextResponse.json(
@@ -125,4 +185,3 @@ export async function GET(req) {
   }
 }
 
-// ... PUT and other methods remain unchanged ...

@@ -30,9 +30,6 @@ export default async function handler(req, res) {
       case "employees":
         data = await db.collection("employees").find().toArray();
         break;
-      case "leads":
-        data = await db.collection("leads").find().toArray();
-        break;
       default:
         return res.status(400).json({ message: "Invalid report type" });
     }

@@ -40,7 +40,6 @@ export default function Reports() {
           "income", 
           "expenses", 
           "employees", 
-          "leads"
         ].map((type) => (
           <button
             key={type}

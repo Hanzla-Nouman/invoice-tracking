@@ -16,10 +16,10 @@ export default function AddConsultant() {
     status: "Active",
     country: "",
     address: "",
-    ratePerHour: 0,
-    ratePerDay: 0,
-    baseSalary: 0,
-    insuranceAmount: 0,
+    ratePerHour: "",
+    ratePerDay: "",
+    baseSalary: "",
+    insuranceAmount: "",
   });
   
   const [loading, setLoading] = useState(false);
@@ -31,13 +31,34 @@ export default function AddConsultant() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Check if financial fields are empty
+    if (
+      form.baseSalary === "" || 
+      form.insuranceAmount === "" || 
+      form.ratePerHour === "" || 
+      form.ratePerDay === ""
+    ) {
+      toast.error("Please enter values for all financial fields (you may enter 0 if applicable)");
+      return;
+    }
+
     setLoading(true);
 
     try {
+      // Convert financial fields to numbers
+      const payload = {
+        ...form,
+        baseSalary: Number(form.baseSalary),
+        insuranceAmount: Number(form.insuranceAmount),
+        ratePerHour: Number(form.ratePerHour),
+        ratePerDay: Number(form.ratePerDay)
+      };
+
       const res = await fetch("/api/consultants", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify(payload),
       });
 
       const data = await res.json();
@@ -54,7 +75,11 @@ export default function AddConsultant() {
           bio: "",
           status: "Active",
           country: "",
-          address: ""
+          address: "",
+          ratePerHour: "",
+          ratePerDay: "",
+          baseSalary: "",
+          insuranceAmount: "",
         });
       } else {
         toast.error(data.message || "Failed to add consultant.");
@@ -147,62 +172,67 @@ export default function AddConsultant() {
             <option value="Inactive">Inactive</option>
           </select>
         </div>
+
         <div>
-  <label className="block text-gray-700">Base Salary ($)</label>
-  <input
-    type="number"
-    name="baseSalary"
-    value={form.baseSalary}
-    onChange={handleChange}
-    placeholder="3000"
-    className="w-full p-2 border rounded"
-    step="0.01"
-    min="0"
-  />
-</div>
+          <label className="block text-gray-700">Base Salary ($) *</label>
+          <input
+            type="number"
+            name="baseSalary"
+            value={form.baseSalary}
+            onChange={handleChange}
+            placeholder="3000"
+            className="w-full p-2 border rounded"
+            step="0.01"
+            min="0"
+            required
+          />
+        </div>
 
-<div>
-  <label className="block text-gray-700">Insurance Amount ($)</label>
-  <input
-    type="number"
-    name="insuranceAmount"
-    value={form.insuranceAmount}
-    onChange={handleChange}
-    placeholder="500"
-    className="w-full p-2 border rounded"
-    step="0.01"
-    min="0"
-  />
-</div>
+        <div>
+          <label className="block text-gray-700">Insurance Amount ($) *</label>
+          <input
+            type="number"
+            name="insuranceAmount"
+            value={form.insuranceAmount}
+            onChange={handleChange}
+            placeholder="500"
+            className="w-full p-2 border rounded"
+            step="0.01"
+            min="0"
+            required
+          />
+        </div>
 
+        <div>
+          <label className="block text-gray-700">Rate Per Hour ($) *</label>
+          <input
+            type="number"
+            name="ratePerHour"
+            value={form.ratePerHour}
+            onChange={handleChange}
+            placeholder="50"
+            className="w-full p-2 border rounded"
+            step="0.01"
+            min="0"
+            required
+          />
+        </div>
 
-<div>
-  <label className="block text-gray-700">Rate Per Hour ($)</label>
-  <input
-    type="number"
-    name="ratePerHour"
-    value={form.ratePerHour}
-    onChange={handleChange}
-    placeholder="50"
-    className="w-full p-2 border rounded"
-    step="0.01"
-    min="0"
-  />
-</div>
+        <div>
+          <label className="block text-gray-700">Rate Per Day ($) *</label>
+          <input
+            type="number"
+            name="ratePerDay"
+            value={form.ratePerDay}
+            onChange={handleChange}
+            placeholder="400"
+            className="w-full p-2 border rounded"
+            step="0.01"
+            min="0"
+            required
+          />
+        </div>
 
-<div>
-  <label className="block text-gray-700">Rate Per Day ($)</label>
-  <input
-    type="number"
-    name="ratePerDay"
-    value={form.ratePerDay}
-    onChange={handleChange}
-    placeholder="400"
-    className="w-full p-2 border rounded"
-    step="0.01"
-    min="0"
-  />
-</div>
         <div>
           <label className="block text-gray-700">Country</label>
           <input

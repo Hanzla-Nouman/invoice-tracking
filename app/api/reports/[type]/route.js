@@ -3,7 +3,6 @@ import dbConnect from "@/lib/db";
 import employee from "@/models/employee";
 import expense from "@/models/expense";
 import income from "@/models/income";
-import lead from "@/models/lead";
 import { parse } from "json2csv";
 
 export async function GET(req, { params }) {
@@ -22,9 +21,6 @@ export async function GET(req, { params }) {
         break;
       case "income":
         data = await income.find({});
-        break;
-      case "leads":
-        data = await lead.find({});
         break;
       default:
         return NextResponse.json({ error: "Invalid report type" }, { status: 400 });

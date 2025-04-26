@@ -15,7 +15,7 @@ export default function AddContractPage() {
   const [contract, setContract] = useState({
     title: "",
     description: "",
-    consultants: [], // Changed from consultant to consultants (array)
+    consultants: [],
     customer: "",
     startDate: "",
     endDate: "",
@@ -55,16 +55,16 @@ export default function AddContractPage() {
     const { name, value } = e.target;
     setContract(prev => ({ ...prev, [name]: value }));
   };
-  const handleConsultantChange = (e) => {
-    const options = e.target.options;
-    const selectedConsultants = [];
-    for (let i = 0; i < options.length; i++) {
-      if (options[i].selected) {
-        selectedConsultants.push(options[i].value);
-      }
-    }
-    setContract(prev => ({ ...prev, consultants: selectedConsultants }));
+
+  const handleConsultantToggle = (consultantId) => {
+    setContract(prev => {
+      const newConsultants = prev.consultants.includes(consultantId)
+        ? prev.consultants.filter(id => id !== consultantId)
+        : [...prev.consultants, consultantId];
+      return { ...prev, consultants: newConsultants };
+    });
   };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -165,27 +165,32 @@ export default function AddContractPage() {
           />
         </div>
 
-        <div>
-  <label className="block text-gray-700">Consultants *</label>
-  <select
-    name="consultants"
-    multiple
-    value={contract.consultants}
-    onChange={handleConsultantChange}
-    className="w-full p-2 border rounded h-auto min-h-[42px]"
-    required
-    disabled={loading || dataLoading}
-  >
-    {dataLoading ? (
-      <option disabled>Loading consultants...</option>
-    ) : consultants.map((c) => (
-      <option key={c._id} value={c._id}>
-        {c.name}
-      </option>
-    ))}
-  </select>
-  <p className="text-sm text-gray-500 mt-1">Hold Ctrl/Cmd to select multiple</p>
-</div>
+        <div className="col-span-2">
+          <label className="block text-gray-700">Consultants *</label>
+          <div className="mt-2 space-y-2 max-h-60 overflow-y-auto p-2 border rounded">
+            {dataLoading ? (
+              <p className="text-gray-500">Loading consultants...</p>
+            ) : consultants.length > 0 ? (
+              consultants.map(consultant => (
+                <div key={consultant._id} className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id={`consultant-${consultant._id}`}
+                    checked={contract.consultants.includes(consultant._id)}
+                    onChange={() => handleConsultantToggle(consultant._id)}
+                    className="h-4 w-4"
+                    disabled={loading}
+                  />
+                  <label htmlFor={`consultant-${consultant._id}`} className="flex-1">
+                    {consultant.name} ({consultant.email})
+                  </label>
+                </div>
+              ))
+            ) : (
+              <p className="text-gray-500">No consultants available</p>
+            )}
+          </div>
+        </div>
 
         <div>
           <label className="block text-gray-700">Customer *</label>
@@ -296,5 +301,3 @@ export default function AddContractPage() {
     </div>
   );
 }
-
-

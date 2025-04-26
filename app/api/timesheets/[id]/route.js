@@ -1,4 +1,5 @@
 import dbConnect from "@/lib/db";
+import MonthlySummary from "@/models/MonthlySummary";
 import Timesheet from "@/models/timesheet";
 import { NextResponse } from "next/server";
 
@@ -15,20 +16,81 @@ export async function PUT(req, { params }) {
       });
     }
 
-    // ✅ Update timesheet
+    // Get the existing timesheet first to compare values
+    const existingTimesheet = await Timesheet.findById(id);
+    if (!existingTimesheet) {
+      return new Response(JSON.stringify({ error: "Timesheet not found" }), {
+        status: 404,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    // Calculate new total amount if quantity or rate is being updated
+    let newTotalAmount;
+    if (updatedFields.workQuantity !== undefined || updatedFields.rate !== undefined) {
+      const newQuantity = updatedFields.workQuantity ?? existingTimesheet.workQuantity;
+      const newRate = updatedFields.rate ?? existingTimesheet.rate;
+      newTotalAmount = newQuantity * newRate;
+      updatedFields.totalAmount = newTotalAmount;
+    }
+
+    // Update the timesheet
     const updatedTimesheet = await Timesheet.findByIdAndUpdate(
       id,
       { $set: updatedFields },
       { new: true, runValidators: true }
     )
-      .populate("consultant", "name email") // ✅ Populate consultant details
-      .populate("project", "name"); // ✅ Populate project details
+      .populate("consultant", "name email")
+      .populate("contract", "title");
 
     if (!updatedTimesheet) {
       return new Response(JSON.stringify({ error: "Timesheet not found" }), {
         status: 404,
         headers: { "Content-Type": "application/json" },
       });
+    }
+
+    // Only update monthly summary if relevant fields were changed
+    if (updatedFields.workQuantity !== undefined || 
+        updatedFields.rate !== undefined || 
+        updatedFields.status !== undefined) {
+      
+      // Find all monthly summaries containing this timesheet (should typically be one)
+      const monthlySummaries = await MonthlySummary.find({
+        Timesheets: id,
+        monthYear: existingTimesheet.monthYear
+      }).populate('Timesheets');
+
+      for (const monthlySummary of monthlySummaries) {
+        // Recalculate the total approved amount
+        let totalApprovedAmount = 0;
+        
+        monthlySummary.Timesheets.forEach(timesheet => {
+          if (timesheet._id.toString() === id) {
+            // Use the updated values for our timesheet if it's approved
+            if (updatedFields.status === 'Approved' || 
+                (updatedFields.status === undefined && timesheet.status === 'Approved')) {
+              totalApprovedAmount += (newTotalAmount || timesheet.totalAmount);
+            }
+          } else {
+            // Use existing values for other timesheets if they're approved
+            if (timesheet.status === 'Approved') {
+              totalApprovedAmount += timesheet.totalAmount;
+            }
+          }
+        });
+
+        // Update the monthly summary
+        await MonthlySummary.findByIdAndUpdate(
+          monthlySummary._id,
+          {
+            totalApprovedAmount,
+            remainingBalance: totalApprovedAmount - 
+                            (monthlySummary.baseSalary || 0) - 
+                            (monthlySummary.insuranceAmount || 0)
+          }
+        );
+      }
     }
 
     return new Response(JSON.stringify({ timesheet: updatedTimesheet }), {
@@ -54,7 +116,11 @@ export async function GET(req, { params }) {
     await dbConnect();
     
     const { id } = params;
-    const timesheet = await Timesheet.findById(id).populate("consultant", "name email").populate("project", "name");
+    const timesheet = await Timesheet.findById(id) .populate({
+      path: "consultant",
+      model: "Users", 
+      select: "name email baseSalary insuranceAmount"
+    }).populate("contract", "title");
 
     if (!timesheet) {
       return NextResponse.json({ message: "Timesheet not found" }, { status: 404 });

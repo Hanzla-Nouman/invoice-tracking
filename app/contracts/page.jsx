@@ -56,7 +56,9 @@ export default function Contracts() {
   }, [status, session]);
 
   const handleRowClick = (id) => {
-    router.push(`/contracts/${id}`);
+    if (session?.user?.role === "Admin") {
+      router.push(`/contracts/${id}`);
+    }
   };
 
   if (status === "loading" || loading) {
@@ -81,7 +83,7 @@ export default function Contracts() {
         {session?.user?.role === "Admin" ? "All Contracts" : "My Contracts"}
       </h1>
       
-      {contracts.length === 0 ? (
+      {contracts?.length === 0 ? (
         <p className="text-center text-gray-500">No contracts found</p>
       ) : (
         <div className="overflow-x-auto">

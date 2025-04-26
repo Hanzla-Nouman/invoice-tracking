@@ -15,7 +15,7 @@ export default function ContractDetails() {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
-    consultants: [], // Changed to array
+    consultants: [],
     customer: "",
     startDate: "",
     endDate: "",
@@ -41,7 +41,7 @@ export default function ContractDetails() {
         setFormData({
           title: data.title,
           description: data.description,
-          consultant: data.consultant?._id || data.consultant,
+          consultants: data.consultants?.map(c => c._id || c) || [], // Store consultant IDs
           customer: data.customer?._id || data.customer,
           startDate: new Date(data.startDate).toISOString().split('T')[0],
           endDate: new Date(data.endDate).toISOString().split('T')[0],
@@ -125,20 +125,21 @@ export default function ContractDetails() {
     }
   };
 
-  const handleConsultantChange = (e) => {
-    const options = e.target.options;
-    const selectedConsultants = [];
-    for (let i = 0; i < options.length; i++) {
-      if (options[i].selected) {
-        selectedConsultants.push(options[i].value);
-      }
-    }
-    setFormData(prev => ({ ...prev, consultants: selectedConsultants }));
+  const handleConsultantToggle = (consultantId) => {
+    setFormData(prev => {
+      const currentConsultants = prev.consultants || [];
+      const newConsultants = currentConsultants.includes(consultantId)
+        ? currentConsultants.filter(id => id !== consultantId)
+        : [...currentConsultants, consultantId];
+      return { ...prev, consultants: newConsultants };
+    });
   };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
+  
   if (loading) return (
     <div className="flex justify-center py-20">
       <Loader className="animate-spin w-10 h-10 text-gray-600" />
@@ -219,19 +220,19 @@ export default function ContractDetails() {
               <p className="mt-1 text-lg">{contract.description || "N/A"}</p>
             </div>
             <div>
-  <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">Consultants</h3>
-  <div className="mt-1">
-    {contract.consultants?.length > 0 ? (
-      <ul className="list-disc list-inside">
-        {contract.consultants.map((c, index) => (
-          <li key={index}>{typeof c === 'object' ? c.name : consultants.find(cons => cons._id === c)?.name || 'Unknown'}</li>
-        ))}
-      </ul>
-    ) : (
-      <p className="text-lg">N/A</p>
-    )}
-  </div>
-</div>
+              <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">Consultants</h3>
+              <div className="mt-1">
+                {contract.consultants?.length > 0 ? (
+                  <ul className="list-disc list-inside">
+                    {contract.consultants.map((c, index) => (
+                      <li key={index}>{typeof c === 'object' ? c.name : consultants.find(cons => cons._id === c)?.name || 'Unknown'}</li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-lg">N/A</p>
+                )}
+              </div>
+            </div>
             <div>
               <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">Customer</h3>
               <p className="mt-1 text-lg">{contract.customer?.fullName || "N/A"}</p>
@@ -251,11 +252,11 @@ export default function ContractDetails() {
               </p>
             </div>
             {contract.maxDaysPerYear && (
-  <div>
-    <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">Max Days/Year</h3>
-    <p className="mt-1 text-lg">{contract.maxDaysPerYear}</p>
-  </div>
-)}
+              <div>
+                <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">Max Days/Year</h3>
+                <p className="mt-1 text-lg">{contract.maxDaysPerYear}</p>
+              </div>
+            )}
             <div>
               <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">Rate</h3>
               <p className="mt-1 text-lg">
@@ -272,7 +273,6 @@ export default function ContractDetails() {
                 {new Date(contract.startDate).toLocaleDateString()} - {new Date(contract.endDate).toLocaleDateString()}
               </p>
             </div>
-        
           </div>
         </div>
       ) : (
@@ -304,23 +304,30 @@ export default function ContractDetails() {
               />
             </div>
             <div>
-  <label className="block text-sm font-bold text-gray-700 uppercase tracking-wider">
-    Consultants *
-  </label>
-  <select
-    name="consultants"
-    multiple
-    value={formData.consultants}
-    onChange={handleConsultantChange}
-    className="w-full p-2 border rounded mt-1 h-auto min-h-[42px]"
-    required
-  >
-    {consultants.map((c) => (
-      <option key={c._id} value={c._id}>{c.name}</option>
-    ))}
-  </select>
-  <p className="text-sm text-gray-500 mt-1">Hold Ctrl/Cmd to select multiple</p>
-</div>
+              <label className="block text-sm font-bold text-gray-700 uppercase tracking-wider">
+                Consultants *
+              </label>
+              <div className="mt-2 space-y-2 max-h-60 overflow-y-auto p-2 border rounded">
+                {consultants.length > 0 ? (
+                  consultants.map(consultant => (
+                    <div key={consultant._id} className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        id={`consultant-${consultant._id}`}
+                        checked={formData.consultants?.includes(consultant._id)}
+                        onChange={() => handleConsultantToggle(consultant._id)}
+                        className="h-4 w-4"
+                      />
+                      <label htmlFor={`consultant-${consultant._id}`} className="flex-1">
+                        {consultant.name} ({consultant.email})
+                      </label>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-gray-500">No consultants available</p>
+                )}
+              </div>
+            </div>
             <div>
               <label className="block text-sm font-bold text-gray-700 uppercase tracking-wider">
                 Customer *
@@ -360,20 +367,20 @@ export default function ContractDetails() {
               </select>
             </div>
             <div>
-  <label className="block text-sm font-bold text-gray-700 uppercase tracking-wider">
-    Max Days Per Year
-  </label>
-  <input
-    type="number"
-    name="maxDaysPerYear"
-    min="0"
-    max="366"
-    value={formData.maxDaysPerYear || ""}
-    onChange={handleChange}
-    placeholder="Leave empty for no limit"
-    className="w-full p-2 border rounded mt-1"
-  />
-</div>
+              <label className="block text-sm font-bold text-gray-700 uppercase tracking-wider">
+                Max Days Per Year
+              </label>
+              <input
+                type="number"
+                name="maxDaysPerYear"
+                min="0"
+                max="366"
+                value={formData.maxDaysPerYear || ""}
+                onChange={handleChange}
+                placeholder="Leave empty for no limit"
+                className="w-full p-2 border rounded mt-1"
+              />
+            </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-bold text-gray-700 uppercase tracking-wider">
@@ -449,7 +456,6 @@ export default function ContractDetails() {
                 />
               </div>
             </div>
-                    
           </div>
           
           <div className="col-span-2 flex justify-end gap-2 pt-4">
