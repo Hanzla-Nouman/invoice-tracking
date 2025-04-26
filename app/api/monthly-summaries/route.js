@@ -1,4 +1,4 @@
-import { getToken } from "next-auth/jwt";
+
 import { NextResponse } from "next/server";
 import MonthlySummary from "@/models/MonthlySummary";
 import dbConnect from "@/lib/db";

@@ -83,16 +83,16 @@ const Sidebar = () => {
         { label: "Add Income", path: "/income" }
       ]
     },
-    {
-      id: "project",
-      label: "Project",
-      icon: <FaProjectDiagram size={20} />,
-      visible: role === "Admin",
-      subItems: [
-        { label: "List Projects", path: "/projects" },
-        { label: "Add Project", path: "/projects/add",visible: role === "Admin"  }
-      ]
-    },
+    // {
+    //   id: "project",
+    //   label: "Project",
+    //   icon: <FaProjectDiagram size={20} />,
+    //   visible: role === "Admin",
+    //   subItems: [
+    //     { label: "List Projects", path: "/projects" },
+    //     { label: "Add Project", path: "/projects/add",visible: role === "Admin"  }
+    //   ]
+    // },
     {
       id: "consultant",
       label: "Consultants",

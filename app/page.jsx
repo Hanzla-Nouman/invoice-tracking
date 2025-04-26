@@ -350,7 +350,7 @@ useEffect(() => {
       </div>
 
       {role === "Admin" && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
           <div
             onClick={() => router.push("/customers")}
             className="bg-white hover:cursor-pointer hover:-translate-y-1 transition-all duration-100  hover:text-gray-900  p-6 rounded-lg shadow text-center"
@@ -365,13 +365,13 @@ useEffect(() => {
             <h2 className="text-lg font-semibold">Consultants</h2>
             <p className="text-2xl font-bold">{consultants}</p>
           </div>
-          <div
+          {/* <div
             onClick={() => router.push("/projects")}
             className="bg-white hover:cursor-pointer hover:-translate-y-1 transition-all duration-100 hover:text-gray-900 p-6 rounded-lg shadow text-center"
           >
             <h2 className="text-lg font-semibold">Projects</h2>
             <p className="text-2xl font-bold">{projects}</p>
-          </div>
+          </div> */}
         </div>
       )}
 
