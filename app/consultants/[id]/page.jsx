@@ -2,7 +2,7 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Loader, Pencil, Trash2, Save, X } from "lucide-react";
+import { Loader, Pencil, Trash2, Save, X, Lock } from "lucide-react";
 import toast from "react-hot-toast";
 
 export default function ConsultantDetails() {
@@ -24,6 +24,54 @@ export default function ConsultantDetails() {
   });
   const [isUpdating, setIsUpdating] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [passwordData, setPasswordData] = useState({
+    newPassword: "",
+    confirmPassword: ""
+  });
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+
+  // ... existing functions ...
+
+  const handlePasswordChange = async (e) => {
+    e.preventDefault();
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      toast.error("Passwords don't match!");
+      return;
+    }
+    if (passwordData.newPassword.length < 6) {
+      toast.error("Password must be at least 6 characters");
+      return;
+    }
+
+    try {
+      setIsChangingPassword(true);
+      const res = await fetch(`/api/consultants/${id}/password`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          newPassword: passwordData.newPassword
+        })
+      });
+      
+      if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
+      
+      toast.success("Password updated successfully!");
+      setShowPasswordModal(false);
+      setPasswordData({
+        newPassword: "",
+        confirmPassword: ""
+      });
+    } catch (err) {
+      console.error("Error changing password:", err);
+      toast.error("Failed to update password.");
+    } finally {
+      setIsChangingPassword(false);
+    }
+  };
+
 
   useEffect(() => {
     const fetchConsultant = async () => {
@@ -123,6 +171,71 @@ export default function ConsultantDetails() {
   return (
     <div className="max-w-3xl mx-auto mt-10 p-6 bg-white shadow-lg rounded-lg relative">
       {/* Delete Confirmation Modal */}
+
+       {showPasswordModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full">
+            <h3 className="text-xl font-bold mb-4">Change Password</h3>
+            <form onSubmit={handlePasswordChange}>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 uppercase tracking-wider">
+                    New Password *
+                  </label>
+                  <input
+                    type="password"
+                    name="newPassword"
+                    value={passwordData.newPassword}
+                    onChange={(e) => setPasswordData({...passwordData, newPassword: e.target.value})}
+                    className="w-full p-2 border rounded mt-1"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 uppercase tracking-wider">
+                    Confirm Password *
+                  </label>
+                  <input
+                    type="password"
+                    name="confirmPassword"
+                    value={passwordData.confirmPassword}
+                    onChange={(e) => setPasswordData({...passwordData, confirmPassword: e.target.value})}
+                    className="w-full p-2 border rounded mt-1"
+                    required
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end gap-3 mt-6">
+                <button
+                  type="button"
+                  onClick={() => setShowPasswordModal(false)}
+                  className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-100"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isChangingPassword}
+                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 flex items-center gap-1 disabled:bg-blue-400"
+                >
+                  {isChangingPassword ? (
+                    <>
+                      <Loader className="animate-spin w-4 h-4" />
+                      Updating...
+                    </>
+                  ) : (
+                    <>
+                      <Save size={16} />
+                      Update Password
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {showDeleteModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full">
@@ -152,6 +265,13 @@ export default function ConsultantDetails() {
           {isEditing ? "Edit Consultant" : "Consultant Details"}
         </h1>
         <div className="flex gap-2">
+          <button
+            onClick={() => setShowPasswordModal(true)}
+            className="flex items-center gap-1 px-3 py-1 bg-purple-600 text-white rounded hover:bg-purple-700"
+          >
+            <Lock size={16} />
+            Change Password
+          </button>
           {!isEditing ? (
             <button
               onClick={() => setIsEditing(true)}

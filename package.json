@@ -12,6 +12,7 @@
     "bcryptjs": "^2.4.3",
     "chart.js": "^4.4.8",
     "dotenv": "^16.4.7",
+    "iconv-lite": "^0.6.3",
     "json2csv": "^6.0.0-alpha.2",
     "lucide-react": "^0.484.0",
     "mongoose": "^8.13.2",

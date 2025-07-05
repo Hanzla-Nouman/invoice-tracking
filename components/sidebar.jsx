@@ -79,7 +79,7 @@ const Sidebar = () => {
       icon: <MdAccountBalance size={20} />,
       visible: role === "Admin",
       subItems: [
-        { label: "Add Expense", path: "/expense" },
+        { label: "Expenses", path: "/expenses" },
         { label: "Add Income", path: "/income" }
       ]
     },
