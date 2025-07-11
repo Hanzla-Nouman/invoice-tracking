@@ -354,6 +354,7 @@ export default function Timesheet() {
                 <th className="text-left p-1 border-b">Month</th>
                 <th className="text-left p-1 border-b">App. Ts</th>
                 <th className="text-left p-1 border-b">Insurance</th>
+                <th className="text-left p-1 border-b">Expense</th>
                 <th className="text-left p-1 border-b">Salary</th>
                 <th className="text-left p-1 border-b">Total</th>
                 <th className="text-left p-1 border-b">Remaining</th>
@@ -392,6 +393,7 @@ export default function Timesheet() {
                       </td>
                       
                       <td className="p-1">€ {month.insuranceAmount?.toFixed(2) || '0.00'}</td>
+                      <td className="p-1">€ {month?.expense?.toFixed(2) || '0.00'}</td>
                       <td className="p-1">€ {month.baseSalary?.toFixed(2) || '0.00'}</td>
                       <td className="p-1">€ {month.totalApprovedAmount?.toFixed(2) || '0.00'}</td>
                       <td className="p-1">€ {month.remainingBalance?.toFixed(2) || '0.00'}</td>

@@ -18,7 +18,8 @@ const MonthlySummarySchema = new mongoose.Schema(
     totalApprovedAmount: { type: Number, required: true, default: 0 },
     baseSalary: { type: Number, required: true, default: 0 },
     insuranceAmount: { type: Number, required: true, default: 0 },
-    remainingBalance: { type: Number, required: true, default: 0 }, // totalApprovedAmount - baseSalary -insuranceAmount
+    expense: { type: Number, required: true, default: 0 }, // Added expense field
+    remainingBalance: { type: Number, required: true, default: 0 }, // totalApprovedAmount - baseSalary - insuranceAmount - expense
     paymentStatus: {
       type: String,
       enum: ["Pending", "Paid", "Partially Paid"],
@@ -28,7 +29,7 @@ const MonthlySummarySchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
-
+   
 // Add compound index to prevent duplicate monthly summaries
 MonthlySummarySchema.index({ consultant: 1, monthYear: 1 }, { unique: true });
 

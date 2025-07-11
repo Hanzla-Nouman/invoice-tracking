@@ -80,7 +80,7 @@ const Sidebar = () => {
       visible: role === "Admin",
       subItems: [
         { label: "Expenses", path: "/expenses" },
-        { label: "Add Income", path: "/income" }
+        { label: "Incomes", path: "/income" }
       ]
     },
     // {
