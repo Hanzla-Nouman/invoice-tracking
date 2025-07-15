@@ -77,10 +77,10 @@ const Sidebar = () => {
       id: "accounting",
       label: "Accounting",
       icon: <MdAccountBalance size={20} />,
-      visible: role === "Admin",
+      visible: true,
       subItems: [
         { label: "Expenses", path: "/expenses" },
-        { label: "Incomes", path: "/income" }
+        { label: "Incomes", path: "/income" ,visible: role === "Admin"}
       ]
     },
     // {
@@ -123,6 +123,7 @@ const Sidebar = () => {
         { label: "Create Contract", path: "/contracts/add",visible: role === "Admin"  }
       ]
     },
+ 
     {
       id: "hrm",
       label: "HRM",

@@ -2,8 +2,15 @@ import dbConnect from "@/lib/db";
 import Expense from "@/models/expense";
 import Users from "@/models/user";
 import MonthlySummary from "@/models/MonthlySummary";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
 export async function POST(req) {
+  const session = await getServerSession(authOptions);
+  if (!session) {
+    return new Response(JSON.stringify({ success: false, error: "Unauthorized" }), { status: 401 });
+  }
+
   try {
     await dbConnect();
     const data = await req.json();
@@ -17,7 +24,7 @@ export async function POST(req) {
       }), { status: 400 });
     }
 
-    // Convert amount to number to prevent string concatenation
+    // Convert amount to number
     const expenseAmount = Number(data.amount);
     if (isNaN(expenseAmount)) {
       return new Response(JSON.stringify({ 
@@ -30,13 +37,12 @@ export async function POST(req) {
     const expense = new Expense({...data, amount: expenseAmount});
     await expense.save();
     
-    // Format monthYear
+    // Update monthly summary
     const expenseDate = new Date(data.date);
     const monthNames = ["January", "February", "March", "April", "May", "June",
                        "July", "August", "September", "October", "November", "December"];
     const monthYear = `${monthNames[expenseDate.getMonth()]} ${expenseDate.getFullYear()}`;
     
-    // Find the existing monthly summary
     const existingSummary = await MonthlySummary.findOne({
       consultant: data.consultant,
       monthYear: monthYear
@@ -49,18 +55,15 @@ export async function POST(req) {
       }), { status: 400 });
     }
 
-    // Convert all amounts to numbers
     const currentExpense = Number(existingSummary.expense) || 0;
     const totalApproved = Number(existingSummary.totalApprovedAmount) || 0;
     const baseSalary = Number(existingSummary.baseSalary) || 0;
     const insurance = Number(existingSummary.insuranceAmount) || 0;
 
-    // Calculate new values
     const newExpenseTotal = currentExpense + expenseAmount;
     const newRemainingBalance = totalApproved - (baseSalary + insurance + newExpenseTotal);
 
-    // Update the existing summary
-    const updatedSummary = await MonthlySummary.findByIdAndUpdate(
+    await MonthlySummary.findByIdAndUpdate(
       existingSummary._id,
       {
         $set: { 
@@ -88,10 +91,23 @@ export async function POST(req) {
     }), { status: 500 });
   }
 }
-export async function GET() {
+
+export async function GET(req) {
+  const session = await getServerSession(authOptions);
+  if (!session) {
+    return new Response(JSON.stringify({ success: false, error: "Unauthorized" }), { status: 401 });
+  }
+
   try {
     await dbConnect();
-    const expenses = await Expense.find()
+    
+    // Build query based on user role
+    let query = {};
+    if (session.user.role === 'Consultant') {
+      query = { consultant: session.user.id };
+    }
+    
+    const expenses = await Expense.find(query)
       .populate("consultant", "name email")
       .sort({ date: -1 });
       
