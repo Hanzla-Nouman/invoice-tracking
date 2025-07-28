@@ -300,7 +300,6 @@ export default function Timesheet() {
         </div>
       )}
 
-      {/* Filter controls */}
       <div className="mb-6 flex flex-wrap gap-4">
         {role === "Admin" && !showSummary && (
           <select

@@ -20,6 +20,7 @@ export default function AddConsultant() {
     ratePerDay: "",
     baseSalary: "",
     insuranceAmount: "",
+      creditCardFee: "",
   });
   
   const [loading, setLoading] = useState(false);
@@ -37,7 +38,8 @@ export default function AddConsultant() {
       form.baseSalary === "" || 
       form.insuranceAmount === "" || 
       form.ratePerHour === "" || 
-      form.ratePerDay === ""
+      form.ratePerDay === "" ||
+       form.creditCardFee === ""  
     ) {
       toast.error("Please enter values for all financial fields (you may enter 0 if applicable)");
       return;
@@ -52,7 +54,8 @@ export default function AddConsultant() {
         baseSalary: Number(form.baseSalary),
         insuranceAmount: Number(form.insuranceAmount),
         ratePerHour: Number(form.ratePerHour),
-        ratePerDay: Number(form.ratePerDay)
+        ratePerDay: Number(form.ratePerDay),
+          creditCardFee: Number(form.creditCardFee)  
       };
 
       const res = await fetch("/api/consultants", {
@@ -80,6 +83,7 @@ export default function AddConsultant() {
           ratePerDay: "",
           baseSalary: "",
           insuranceAmount: "",
+          creditCardFee: "",
         });
       } else {
         toast.error(data.message || "Failed to add consultant.");
@@ -182,7 +186,7 @@ export default function AddConsultant() {
             onChange={handleChange}
             placeholder="3000"
             className="w-full p-2 border rounded"
-            step="0.01"
+            step="0.1"
             min="0"
             required
           />
@@ -197,7 +201,7 @@ export default function AddConsultant() {
             onChange={handleChange}
             placeholder="500"
             className="w-full p-2 border rounded"
-            step="0.01"
+            step="0.1"
             min="0"
             required
           />
@@ -212,7 +216,7 @@ export default function AddConsultant() {
             onChange={handleChange}
             placeholder="50"
             className="w-full p-2 border rounded"
-            step="0.01"
+            step="0.1"
             min="0"
             required
           />
@@ -227,12 +231,26 @@ export default function AddConsultant() {
             onChange={handleChange}
             placeholder="400"
             className="w-full p-2 border rounded"
-            step="0.01"
+            step="0.1"
             min="0"
             required
           />
         </div>
-
+<div>
+  <label className="block text-gray-700">Credit Card Fee (%) *</label>
+  <input
+    type="number"
+    name="creditCardFee"
+    value={form.creditCardFee}
+    onChange={handleChange}
+    placeholder="2.5"
+    className="w-full p-2 border rounded"
+    step="0.1"
+    min="0"
+    max="100"
+    required
+  />
+</div>
         <div>
           <label className="block text-gray-700">Country</label>
           <input

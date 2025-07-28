@@ -55,6 +55,7 @@ export async function POST(req) {
       ratePerDay: formData.ratePerDay || 0,
       baseSalary: formData.baseSalary || 0,
       insuranceAmount: formData.insuranceAmount || 0,
+        creditCardFee: formData.creditCardFee || 0,
     });
 
     await newConsultant.save();

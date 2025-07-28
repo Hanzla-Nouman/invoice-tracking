@@ -18,10 +18,9 @@ const UserSchema = new mongoose.Schema(
     address: { type: String }, 
     ratePerHour: { type: Number, default: 0 },
     ratePerDay: { type: Number, default: 0 },
-    // Add these new fields
-    baseSalary: { type: Number, default: 0 },          // Monthly base salary
-    insuranceAmount: { type: Number, default: 0 },     // Monthly insurance amount
-
+    baseSalary: { type: Number, default: 0 },         
+    insuranceAmount: { type: Number, default: 0 },    
+  creditCardFee: { type: Number, default: 0 }
   },
   { timestamps: true }
 );
