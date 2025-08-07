@@ -17,7 +17,9 @@ export default function Timesheet() {
   const [error, setError] = useState("");
   const [showSummary, setShowSummary] = useState(false);
   const [monthlyData, setMonthlyData] = useState([]);
-  const [editingPaymentId, setEditingPaymentId] = useState(null);
+  const [editingPaymentMethodId, setEditingPaymentMethodId] = useState(null);
+  const [editingPaymentStatusId, setEditingPaymentStatusId] = useState(null);
+  const [paymentMethodValue, setPaymentMethodValue] = useState("");
   const [paymentStatusValue, setPaymentStatusValue] = useState("");
   const [monthFilter, setMonthFilter] = useState("");
   const [consultantFilter, setConsultantFilter] = useState("");
@@ -95,7 +97,6 @@ export default function Timesheet() {
 
   const filteredTimesheets = useMemo(() => {
     return timesheets.filter((t) => {
-    
       const monthYear = t.monthYear || 
         new Date(t.dateIssued).toLocaleString("default", {
           month: "long",
@@ -123,7 +124,6 @@ export default function Timesheet() {
       months.add(monthYear);
     });
     return Array.from(months).sort((a, b) => {
-      // Sort months chronologically
       const dateA = new Date(a);
       const dateB = new Date(b);
       return dateB - dateA;
@@ -149,19 +149,50 @@ export default function Timesheet() {
     }
   };
 
-  const togglePaymentEdit = (month) => {
-    if (editingPaymentId === month._id) {
-      setEditingPaymentId(null);
-      setPaymentStatusValue("");
+  const togglePaymentMethodEdit = (month) => {
+    if (editingPaymentMethodId === month._id) {
+      setEditingPaymentMethodId(null);
+      setPaymentMethodValue("");
     } else {
-      setEditingPaymentId(month._id);
-      setPaymentStatusValue(month.paymentStatus);
+      setEditingPaymentMethodId(month._id);
+      setPaymentMethodValue(month.paymentMethod || "Card");
     }
   };
 
-  const handlePaymentStatusChange = async (month) => {
-    if (!paymentStatusValue) return;
-    
+  const togglePaymentStatusEdit = (month) => {
+    if (editingPaymentStatusId === month._id) {
+      setEditingPaymentStatusId(null);
+      setPaymentStatusValue("");
+    } else {
+      setEditingPaymentStatusId(month._id);
+      setPaymentStatusValue(month.paymentStatus || "Pending");
+    }
+  };
+
+  const handlePaymentMethodUpdate = async (month) => {
+    const toastId = toast.loading("Updating payment method...");
+    try {
+      const res = await fetch(`/api/monthly-summaries`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: month._id,
+          paymentMethod: paymentMethodValue,
+        }),
+      });
+      if (!res.ok) throw new Error("Failed to update payment method");
+      const updatedData = await res.json();
+      setMonthlyData(prev =>
+        prev.map(m => (m._id === month._id ? { ...m, paymentMethod: updatedData.paymentMethod } : m))
+      );
+      toast.success("Payment method updated!", { id: toastId });
+      setEditingPaymentMethodId(null);
+    } catch (error) {
+      toast.error(`Error: ${error.message}`, { id: toastId });
+    }
+  };
+
+  const handlePaymentStatusUpdate = async (month) => {
     const toastId = toast.loading("Updating payment status...");
     try {
       const res = await fetch(`/api/monthly-summaries`, {
@@ -169,28 +200,18 @@ export default function Timesheet() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           id: month._id,
-          paymentStatus: paymentStatusValue
-        })
+          paymentStatus: paymentStatusValue,
+        }),
       });
-
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
-      const updatedSummary = await res.json();
-      
-      setMonthlyData(prev => prev.map(m => 
-        m._id === month._id ? { 
-          ...m, 
-          paymentStatus: updatedSummary.paymentStatus,
-          paymentDate: updatedSummary.paymentDate 
-        } : m
-      ));
-      
+      if (!res.ok) throw new Error("Failed to update payment status");
+      const updatedData = await res.json();
+      setMonthlyData(prev =>
+        prev.map(m => (m._id === month._id ? { ...m, paymentStatus: updatedData.paymentStatus } : m))
+      );
       toast.success("Payment status updated!", { id: toastId });
-      setEditingPaymentId(null);
-    
+      setEditingPaymentStatusId(null);
     } catch (error) {
-      console.error("Error updating payment status:", error);
-      toast.error(`Failed to update: ${error.message}`, { id: toastId });
+      toast.error(`Error: ${error.message}`, { id: toastId });
     }
   };
 
@@ -354,9 +375,11 @@ export default function Timesheet() {
                 <th className="text-left p-1 border-b">App. Ts</th>
                 <th className="text-left p-1 border-b">Insurance</th>
                 <th className="text-left p-1 border-b">Expense</th>
+                <th className="text-left p-1 border-b">Card Fee</th>
                 <th className="text-left p-1 border-b">Salary</th>
                 <th className="text-left p-1 border-b">Total</th>
                 <th className="text-left p-1 border-b">Remaining</th>
+                <th className="text-left p-1 border-b">P.Method</th>
                 <th className="text-left p-1 border-b">Payment</th>
                 <th className="text-left p-1 border-b">Action</th>
               </tr>
@@ -364,7 +387,7 @@ export default function Timesheet() {
             <tbody>
               {monthlyData.length === 0 ? (
                 <tr>
-                  <td colSpan={role === "Admin" ? 9 : 8} className="text-center py-4">
+                  <td colSpan={role === "Admin" ? 11 : 10} className="text-center py-4">
                     No monthly data found
                   </td>
                 </tr>
@@ -393,60 +416,110 @@ export default function Timesheet() {
                       
                       <td className="p-1">€ {month.insuranceAmount?.toFixed(2) || '0.00'}</td>
                       <td className="p-1">€ {month?.expense?.toFixed(2) || '0.00'}</td>
+                      <td className="p-1">€ {month?.cardFee?.toFixed(2) || '0.00'}</td>
                       <td className="p-1">€ {month.baseSalary?.toFixed(2) || '0.00'}</td>
                       <td className="p-1">€ {month.totalApprovedAmount?.toFixed(2) || '0.00'}</td>
                       <td className="p-1">€ {month.remainingBalance?.toFixed(2) || '0.00'}</td>
                       
+                      {/* Payment Method Column (Editable by Consultant) */}
                       <td className="p-1">
-                      {editingPaymentId === month._id && role === "Admin" ? (
-                        <select
-                          value={paymentStatusValue}
-                          onChange={(e) => setPaymentStatusValue(e.target.value)}
-                          className="p-1 border rounded focus:ring-2 focus:ring-blue-300"
-                        >
-                          <option value="Pending">Pending</option>
-                          <option value="Paid">Paid</option>
-                          <option value="Partially Paid">Partially Paid</option>
-                        </select>
-                      ) : (
-                        <span
-                          className={`px-2 py-1 rounded-full text-xs ${
-                            month.paymentStatus === "Paid"
-                              ? "bg-green-100 text-green-800"
-                              : month.paymentStatus === "Partially Paid"
-                              ? "bg-blue-100 text-blue-800"
-                              : "bg-yellow-100 text-yellow-800"
-                          }`}
-                        >
-                          {month.paymentStatus}
-                        </span>
-                      )}
+                        {editingPaymentMethodId === month._id && role === "Consultant" ? (
+                          <select
+                            value={paymentMethodValue}
+                            onChange={(e) => setPaymentMethodValue(e.target.value)}
+                            className="p-1 border rounded focus:ring-2 focus:ring-blue-300"
+                          >
+                            <option value="Card">Card</option>
+                            <option value="Invoice">Invoice</option>
+                          </select>
+                        ) : (
+                          <span className="px-2 py-1 rounded-full text-xs bg-gray-100">
+                            {month.paymentMethod || "N/A"}
+                          </span>
+                        )}
+                      </td>
+
+                      {/* Payment Status Column (Editable by Admin) */}
+                      <td className="p-1">
+                        {editingPaymentStatusId === month._id && role === "Admin" ? (
+                          <select
+                            value={paymentStatusValue}
+                            onChange={(e) => setPaymentStatusValue(e.target.value)}
+                            className="p-1 border rounded focus:ring-2 focus:ring-blue-300"
+                          >
+                            <option value="Pending">Pending</option>
+                            <option value="Paid">Paid</option>
+                          </select>
+                        ) : (
+                          <span
+                            className={`px-2 py-1 rounded-full text-xs ${
+                              month.paymentStatus === "Paid"
+                                ? "bg-green-100 text-green-800"
+                                : month.paymentStatus === "Partially Paid"
+                                ? "bg-blue-100 text-blue-800"
+                                : "bg-yellow-100 text-yellow-800"
+                            }`}
+                          >
+                            {month.paymentStatus}
+                          </span>
+                        )}
                       </td>
                       
+                      {/* Action Buttons */}
                       <td className="p-1">
-                        {role === "Admin" && (
+                        {/* Consultant Payment Method Actions */}
+                        {role === "Consultant" && (
                           <div className="flex space-x-2">
-                            {editingPaymentId === month._id ? (
+                            {editingPaymentMethodId === month._id ? (
                               <>
                                 <button
-                                  onClick={() => handlePaymentStatusChange(month)}
+                                  onClick={() => handlePaymentMethodUpdate(month)}
                                   className="p-1 bg-green-500 text-white rounded hover:bg-green-600"
                                 >
-                                  <FaSave size={20} />
+                                  <FaSave size={16} />
                                 </button>
                                 <button
-                                  onClick={() => togglePaymentEdit(month)}
+                                  onClick={() => togglePaymentMethodEdit(month)}
                                   className="p-1 bg-gray-500 text-white rounded hover:bg-gray-600"
                                 >
-                                  <MdCancel size={20} />
+                                  <MdCancel size={16} />
                                 </button>
                               </>
                             ) : (
                               <button
-                                onClick={() => togglePaymentEdit(month)}
+                                onClick={() => togglePaymentMethodEdit(month)}
                                 className="p-1 bg-blue-500 text-white rounded hover:bg-blue-600"
                               >
-                                <FaEdit size={20} />
+                                <FaEdit size={16} />
+                              </button>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Admin Payment Status Actions */}
+                        {role === "Admin" && (
+                          <div className="flex space-x-2">
+                            {editingPaymentStatusId === month._id ? (
+                              <>
+                                <button
+                                  onClick={() => handlePaymentStatusUpdate(month)}
+                                  className="p-1 bg-green-500 text-white rounded hover:bg-green-600"
+                                >
+                                  <FaSave size={16} />
+                                </button>
+                                <button
+                                  onClick={() => togglePaymentStatusEdit(month)}
+                                  className="p-1 bg-gray-500 text-white rounded hover:bg-gray-600"
+                                >
+                                  <MdCancel size={16} />
+                                </button>
+                              </>
+                            ) : (
+                              <button
+                                onClick={() => togglePaymentStatusEdit(month)}
+                                className="p-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+                              >
+                                <FaEdit size={16} />
                               </button>
                             )}
                           </div>
@@ -637,7 +710,6 @@ export default function Timesheet() {
                           >
                             <option value="Pending">Pending</option>
                             <option value="Paid">Paid</option>
-                            <option value="Partially Paid">Partially Paid</option>
                           </select>
                         ) : (
                           <span

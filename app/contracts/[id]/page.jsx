@@ -363,6 +363,7 @@ export default function ContractDetails() {
     name="adminFee"
     min="0"
     max="100"
+    step={"0.1"}
     value={formData.adminFee || 0}
     onChange={handleChange}
     className="w-full p-2 border rounded mt-1"

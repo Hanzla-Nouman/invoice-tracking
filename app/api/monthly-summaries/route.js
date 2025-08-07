@@ -32,6 +32,10 @@ export async function GET(req) {
           path: 'Timesheets',
           select: 'workType workQuantity rate status paymentStatus'
         })
+        .populate({
+          path: 'consultant',
+          select: 'creditCardFee'
+        })
         .sort({ monthYear: -1 });
   
       return NextResponse.json(summaries, { status: 200 });
@@ -48,33 +52,71 @@ export async function GET(req) {
 export async function PUT(req) {
   try {
     await dbConnect();
-    
-    const { id, paymentStatus } = await req.json();
-    
-    if (!id || !paymentStatus) {
+    const { id, paymentStatus, paymentMethod } = await req.json();
+
+    if (!id) {
       return NextResponse.json(
-        { error: "Missing required fields" },
+        { error: "Missing required ID field" },
         { status: 400 }
       );
     }
 
-    const updatedSummary = await MonthlySummary.findByIdAndUpdate(
-      id,
-      { paymentStatus, paymentDate: paymentStatus === "Paid" ? new Date() : null },
-      { new: true }
-    );
+    // Fetch the current document with consultant's creditCardFee
+    const currentSummary = await MonthlySummary.findById(id)
+      .populate('consultant', 'creditCardFee');
 
-    if (!updatedSummary) {
+    if (!currentSummary) {
       return NextResponse.json(
         { error: "Monthly summary not found" },
         { status: 404 }
       );
     }
 
+    const updateData = {};
+
+    // Handle payment status
+    if (paymentStatus) {
+      updateData.paymentStatus = paymentStatus;
+      updateData.paymentDate = paymentStatus === "Paid" ? new Date() : null;
+    }
+
+    // Handle payment method
+    if (paymentMethod) {
+      updateData.paymentMethod = paymentMethod;
+
+      if (paymentMethod === "Card") {
+        // Safeguard: Ensure creditCardFee exists and is valid
+        const creditCardFee = currentSummary.consultant?.creditCardFee || 0;
+        if (creditCardFee <= 0 || creditCardFee > 100) {
+          return NextResponse.json(
+            { error: "Invalid credit card fee percentage" },
+            { status: 400 }
+          );
+        }
+
+        // Calculate fee (ensure remainingBalance is positive)
+        const remainingBalance = Math.max(0, currentSummary.remainingBalance);
+        const cardFee = (remainingBalance * creditCardFee) / 100;
+
+        updateData.cardFee = cardFee;
+        updateData.remainingBalance = remainingBalance - cardFee;
+
+      } else {
+        // Reset fee for non-card methods
+        updateData.cardFee = 0;
+      }
+    }
+
+    const updatedSummary = await MonthlySummary.findByIdAndUpdate(
+      id,
+      updateData,
+      { new: true }
+    );
+
     return NextResponse.json(updatedSummary);
-    
+
   } catch (error) {
-    console.error("Error updating payment status:", error);
+    console.error("Error updating monthly summary:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
