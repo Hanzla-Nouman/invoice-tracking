@@ -43,10 +43,11 @@ export async function PUT(req, { params }) {
           status: data.status,
           country: data.country,
           address: data.address,
-          ratePerHour: data.ratePerHour,  // Add this
-          ratePerDay: data.ratePerDay   ,
+          ratePerHour: data.ratePerHour,
+          ratePerDay: data.ratePerDay,
           insuranceAmount: data.insuranceAmount,
           baseSalary: data.baseSalary,
+          creditCardFee: data.creditCardFee
         }
       },
       { new: true }

@@ -1,20 +1,19 @@
 "use client";
 
-import { useMemo,useState } from "react";
-import {  useSession } from "next-auth/react";
+import { useMemo, useState } from "react";
+import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { AiFillCustomerService } from "react-icons/ai";
 import { GoSignIn } from "react-icons/go";
 import { MdAccountBalance, MdContactSupport, MdManageAccounts, MdSpaceDashboard } from "react-icons/md";
-import { FaAngleDown, FaAngleUp, FaRegCalendarAlt, FaSellsy, FaProjectDiagram, FaFileContract } from "react-icons/fa";
+import { FaAngleDown, FaAngleUp, FaRegCalendarAlt, FaSellsy, FaFileContract } from "react-icons/fa";
 import { IoPeopleSharp } from "react-icons/io5";
 import { HiCube } from "react-icons/hi";
 import { IoDocuments } from "react-icons/io5";
+
 const Sidebar = () => {
   const router = useRouter();
   const { data: session } = useSession();
   const role = session?.user?.role;
-
 
   const [dropdownStates, setDropdownStates] = useState({
     customer: false,
@@ -37,144 +36,152 @@ const Sidebar = () => {
   };
 
   // Menu items configuration
-  const menuItems = useMemo(() => [
-   
-    {
-      id: "dashboards",
-      label: "Dashboard",
-      icon: <MdSpaceDashboard size={20} />,
-      path: "/",
-      visible: true,
-    },
-    {
-      id: "dashboard",
-      label: "Dashboard",
-      icon: <MdSpaceDashboard size={20} />,
-      path: "/",
-      visible: true,
-    },
-    {
-      id: "timesheet",
-      label: "Timesheet",
-      icon: <FaRegCalendarAlt size={20} />,
-      visible: !!session?.user,
-      subItems: [
-        { label: "List Timesheet", path: "/timesheet" },
-        { label: "Add Timesheet", path: "/timesheet/add", visible: role === "Consultant" }
-      ]
-    },
-    {
-      id: "customer",
-      label: "Customers",
-      icon: <HiCube size={20} />,
-      visible: role === "Admin",
-      subItems: [
-        { label: "List Customers", path: "/customers" },
-        { label: "Add Customers", path: "/customers/add"  }
-      ]
-    },
-    {
-      id: "accounting",
-      label: "Accounting",
-      icon: <MdAccountBalance size={20} />,
-      visible: true,
-      subItems: [
-        { label: "Expenses", path: "/expenses" },
-        { label: "Incomes", path: "/income" ,visible: role === "Admin"}
-      ]
-    },
-    // {
-    //   id: "project",
-    //   label: "Project",
-    //   icon: <FaProjectDiagram size={20} />,
-    //   visible: role === "Admin",
-    //   subItems: [
-    //     { label: "List Projects", path: "/projects" },
-    //     { label: "Add Project", path: "/projects/add",visible: role === "Admin"  }
-    //   ]
-    // },
-    {
-      id: "consultant",
-      label: "Consultants",
-      icon: <IoPeopleSharp size={20} />,
-      visible: role === "Admin",
-      subItems: [
-        { label: "List Consultants", path: "/consultants" },
-        { label: "Add Consultant", path: "/consultants/add",visible: role === "Admin"  }
-      ]
-    },
-    {
-      id: "order",
-      label: "Orders",
-      icon: <FaSellsy size={20} />,
-      visible: role === "Admin",
-      subItems: [
-        { label: "List Orders", path: "/orders" },
-        { label: "Create Order", path: "/orders/add" ,visible: role === "Admin" }
-      ]
-    },
-       {
-      id: "contract",
-      label: "Contracts",
-      icon: <FaFileContract size={20} />,
-      visible: true,
-      subItems: [
-        { label: "List Contracts", path: "/contracts" },
-        { label: "Create Contract", path: "/contracts/add",visible: role === "Admin"  }
-      ]
-    },
- 
-    {
-      id: "hrm",
-      label: "HRM",
-      icon: <MdManageAccounts size={20} />,
-      visible: role === "Admin",
-      subItems: [
-        { label: "Employee", path: "/employees" },
-        { label: "Add Employee", path: "/employees/add" },
-        { label: "Attendance", path: "/attendance" },
-        { label: "Mark Attendance", path: "/attendance/mark" },
-      ]
-    },
-    {
-      id: "supplier",
-      label: "Supplier",
-      icon: <HiCube size={20} />,
-      visible: role === "Admin",
-      subItems: [
-        { label: "List Suppliers", path: "/suppliers" },
-        { label: "Add Supplier", path: "/suppliers/add" }
-      ]
-    },
- 
-    {
-      id: "report",
-      label: "Reports",
-      icon: <IoDocuments size={20} />,
-      visible: role === "Admin",
-      subItems: [
-        { label: "Export Reports", path: "/reports" }
-      ]
-    },
- 
-    {
-      id: "support",
-      label: "Support",
-      icon: <MdContactSupport size={20} />,
-      visible: true,
-      subItems: [
-        { label: "Tickets", path: "/tickets" },
-        { label: "Create Ticket", path: "/tickets/add" }
-      ]
-    },
-    {
-      id: "login",
-      label: "Log In",
-      icon: <GoSignIn size={20} />,
-      path: "/login",
-      visible: !session?.user,
+  const menuItems = useMemo(() => {
+    // If user is Expense Manager, only show accounting
+    if (role === "expense-manager") {
+      return [
+        {
+          id: "accountin",
+          label: "Accounting",
+          icon: <MdAccountBalance size={20} />,
+          visible: true,
+          subItems: [
+            { label: "Expenses", path: "/expenses" },
+            { label: "Incomes", path: "/income", visible: false }
+          ]
+        },
+        {
+          id: "accounting",
+          label: "Accounting",
+          icon: <MdAccountBalance size={20} />,
+          visible: true,
+          subItems: [
+            { label: "Expenses", path: "/expenses" },
+            { label: "Incomes", path: "/income", visible: false }
+          ]
+        },
+      ];
     }
-  ], [session,role]);
+
+    // Regular menu items for other roles
+    return [
+      {
+        id: "dashboard",
+        label: "Dashboard",
+        icon: <MdSpaceDashboard size={20} />,
+        path: "/",
+        visible: role === "Admin" || role === "Consultant",
+      },
+      {
+        id: "timesheet",
+        label: "Timesheet",
+        icon: <FaRegCalendarAlt size={20} />,
+        visible: role === "Admin" || role === "Consultant",
+        subItems: [
+          { label: "List Timesheet", path: "/timesheet" },
+          { label: "Add Timesheet", path: "/timesheet/add", visible: role === "Consultant" }
+        ]
+      },
+      {
+        id: "customer",
+        label: "Customers",
+        icon: <HiCube size={20} />,
+        visible: role === "Admin",
+        subItems: [
+          { label: "List Customers", path: "/customers" },
+          { label: "Add Customers", path: "/customers/add" }
+        ]
+      },
+      {
+        id: "accounting",
+        label: "Accounting",
+        icon: <MdAccountBalance size={20} />,
+        visible: role === "Admin" || role === "Consultant",
+        subItems: [
+          { label: "Expenses", path: "/expenses" },
+          { label: "Incomes", path: "/income", visible: role === "Admin" }
+        ]
+      },
+      {
+        id: "consultant",
+        label: "Consultants",
+        icon: <IoPeopleSharp size={20} />,
+        visible: role === "Admin",
+        subItems: [
+          { label: "List Consultants", path: "/consultants" },
+          { label: "Add Consultant", path: "/consultants/add", visible: role === "Admin" }
+        ]
+      },
+      {
+        id: "order",
+        label: "Orders",
+        icon: <FaSellsy size={20} />,
+        visible: role === "Admin",
+        subItems: [
+          { label: "List Orders", path: "/orders" },
+          { label: "Create Order", path: "/orders/add", visible: role === "Admin" }
+        ]
+      },
+      {
+        id: "contract",
+        label: "Contracts",
+        icon: <FaFileContract size={20} />,
+        visible: role === "Admin" || role === "Consultant",
+        subItems: [
+          { label: "List Contracts", path: "/contracts" },
+          { label: "Create Contract", path: "/contracts/add", visible: role === "Admin" }
+        ]
+      },
+      {
+        id: "hrm",
+        label: "HRM",
+        icon: <MdManageAccounts size={20} />,
+        visible: role === "Admin",
+        subItems: [
+          { label: "Employee", path: "/employees" },
+          { label: "Add Employee", path: "/employees/add" },
+          { label: "Attendance", path: "/attendance" },
+          { label: "Mark Attendance", path: "/attendance/mark" },
+        ]
+      },
+      {
+        id: "supplier",
+        label: "Supplier",
+        icon: <HiCube size={20} />,
+        visible: role === "Admin",
+        subItems: [
+          { label: "List Suppliers", path: "/suppliers" },
+          { label: "Add Supplier", path: "/suppliers/add" }
+        ]
+      },
+      {
+        id: "report",
+        label: "Reports",
+        icon: <IoDocuments size={20} />,
+        visible: role === "Admin",
+        subItems: [
+          { label: "Export Reports", path: "/reports" }
+        ]
+      },
+      {
+        id: "support",
+        label: "Support",
+        icon: <MdContactSupport size={20} />,
+        visible: role === "Admin" || role === "Consultant",
+        subItems: [
+          { label: "Tickets", path: "/tickets" },
+          { label: "Create Ticket", path: "/tickets/add" }
+        ]
+      },
+      {
+        id: "login",
+        label: "Log In",
+        icon: <GoSignIn size={20} />,
+        path: "/login",
+        visible: !session?.user,
+      }
+    ];
+  }, [session, role]);
 
   return (
     <aside

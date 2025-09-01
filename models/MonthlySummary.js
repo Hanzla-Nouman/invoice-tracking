@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 
+// models/MonthlySummary.js
 const MonthlySummarySchema = new mongoose.Schema(
   {
     consultant: { type: mongoose.Schema.Types.ObjectId, ref: "Users", required: true },
@@ -17,12 +18,18 @@ const MonthlySummarySchema = new mongoose.Schema(
     },
     cardAmount: { type: Number, default: 0 }, 
     invoiceAmount: { type: Number, default: 0 },
-     cardFee: { type: Number, default: 0 },
+    cardFee: { type: Number, default: 0 },
     paymentStatus: {
       type: String,
       enum: ["Pending", "Paid", "Partially Paid"],
       default: "Pending",
     },
+    // New field to track partial payments
+    partialPayments: [{
+      amount: { type: Number, required: true },
+      date: { type: Date, default: Date.now },
+      paymentMethod: { type: String, enum: ["Card", "Invoice", "Cash"] }
+    }],
     paymentDate: { type: Date },
   },
   { timestamps: true }

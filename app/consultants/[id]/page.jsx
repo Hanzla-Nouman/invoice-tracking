@@ -20,7 +20,12 @@ export default function ConsultantDetails() {
     bio: "",
     status: "Active",
     country: "",
-    address: ""
+    address: "",
+    ratePerHour: 0,
+    ratePerDay: 0,
+    insuranceAmount: 0,
+    baseSalary: 0,
+    creditCardFee: 0
   });
   const [isUpdating, setIsUpdating] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -30,8 +35,6 @@ export default function ConsultantDetails() {
     confirmPassword: ""
   });
   const [isChangingPassword, setIsChangingPassword] = useState(false);
-
-  // ... existing functions ...
 
   const handlePasswordChange = async (e) => {
     e.preventDefault();
@@ -72,7 +75,6 @@ export default function ConsultantDetails() {
     }
   };
 
-
   useEffect(() => {
     const fetchConsultant = async () => {
       try {
@@ -90,10 +92,11 @@ export default function ConsultantDetails() {
           status: data.status || "Active",
           country: data.country || "",
           address: data.address || "",
-          ratePerHour: data.ratePerHour || 0,  // Add this
-          ratePerDay: data.ratePerDay || 0 ,
-          insuranceAmount: data.insuranceAmount || 0,  // Add this
-          baseSalary: data.baseSalary || 0 
+          ratePerHour: data.ratePerHour || 0,
+          ratePerDay: data.ratePerDay || 0,
+          insuranceAmount: data.insuranceAmount || 0,
+          baseSalary: data.baseSalary || 0,
+          creditCardFee: data.creditCardFee || 0
         });
         setLoading(false);
       } catch (err) {
@@ -170,9 +173,8 @@ export default function ConsultantDetails() {
 
   return (
     <div className="max-w-3xl mx-auto mt-10 p-6 bg-white shadow-lg rounded-lg relative">
-      {/* Delete Confirmation Modal */}
-
-       {showPasswordModal && (
+      {/* Password Change Modal */}
+      {showPasswordModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full">
             <h3 className="text-xl font-bold mb-4">Change Password</h3>
@@ -236,6 +238,7 @@ export default function ConsultantDetails() {
         </div>
       )}
 
+      {/* Delete Confirmation Modal */}
       {showDeleteModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full">
@@ -292,6 +295,7 @@ export default function ConsultantDetails() {
           <button
             onClick={() => setShowDeleteModal(true)}
             className="flex items-center gap-1 px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700"
+            disabled={isEditing}
           >
             <Trash2 size={16} />
             Delete
@@ -301,30 +305,23 @@ export default function ConsultantDetails() {
 
       {!isEditing ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-4">
+
             <div>
               <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">Name</h3>
               <p className="mt-1 text-lg">{consultant.name}</p>
             </div>
             <div>
-
               <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">Email</h3>
               <p className="mt-1 text-lg">{consultant.email}</p>
             </div>
             <div>
-  <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">Base Salary</h3>
-  <p className="mt-1 text-lg">${consultant.baseSalary?.toFixed(2) || "0.00"}</p>
-</div>
-
-
-
-
+              <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">Base Salary</h3>
+              <p className="mt-1 text-lg">${consultant.baseSalary?.toFixed(2) || "0.00"}</p>
+            </div>
             <div>
-    <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">Rate Per Hour</h3>
-    <p className="mt-1 text-lg">${consultant.ratePerHour?.toFixed(2) || "0.00"}</p>
-  </div>
-  
-
+              <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">Rate Per Hour</h3>
+              <p className="mt-1 text-lg">${consultant.ratePerHour?.toFixed(2) || "0.00"}</p>
+            </div>
             <div>
               <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">Status</h3>
               <p className={`mt-1 text-lg ${
@@ -333,16 +330,9 @@ export default function ConsultantDetails() {
                 {consultant.status}
               </p>
             </div>
-            
-            <div>
-              <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">Country</h3>
-              <p className="mt-1 text-lg">{consultant.country || "-"}</p>
-            </div>
-            
-          </div>
+      
           
-          <div className="space-y-4">
-            
+      
             <div>
               <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">Phone</h3>
               <p className="mt-1 text-lg">{consultant.phone || "-"}</p>
@@ -354,17 +344,25 @@ export default function ConsultantDetails() {
               </p>
             </div>
             <div>
-  <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">Insurance</h3>
-  <p className="mt-1 text-lg">${consultant.insuranceAmount?.toFixed(2) || "0.00"}</p>
-</div>
+              <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">Insurance</h3>
+              <p className="mt-1 text-lg">${consultant.insuranceAmount?.toFixed(2) || "0.00"}</p>
+            </div>
             <div>
-    <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">Rate Per Day</h3>
-    <p className="mt-1 text-lg">${consultant.ratePerDay?.toFixed(2) || "0.00"}</p>
-  </div>
+              <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">Credit Card Fee</h3>
+              <p className="mt-1 text-lg">{consultant.creditCardFee?.toFixed(2) || "0.00"}%</p>
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">Rate Per Day</h3>
+              <p className="mt-1 text-lg">${consultant.ratePerDay?.toFixed(2) || "0.00"}</p>
+            </div>
             <div>
               <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">Address</h3>
               <p className="mt-1 text-lg">{consultant.address || "-"}</p>
             </div>
+            <div>
+              <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">Country</h3>
+              <p className="mt-1 text-lg">{consultant.country || "-"}</p>
+    
           </div>
           
           {consultant.bio && (
@@ -376,7 +374,6 @@ export default function ConsultantDetails() {
         </div>
       ) : (
         <form onSubmit={handleUpdate} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-4">
             <div>
               <label className="block text-sm font-bold text-gray-700 uppercase tracking-wider">
                 Name *
@@ -404,36 +401,33 @@ export default function ConsultantDetails() {
               />
             </div>
             <div>
-  <label className="block text-sm font-bold text-gray-700 uppercase tracking-wider">
-    Insurance Amount ($)
-  </label>
-  <input
-    type="number"
-    name="insuranceAmount"
-    value={formData.insuranceAmount}
-    onChange={handleChange}
-    className="w-full p-2 border rounded mt-1"
-    step="0.01"
-    min="0"
-  />
-</div>
-  <div>
-    <label className="block text-sm font-bold text-gray-700 uppercase tracking-wider">
-      Rate Per Hour ($)
-    </label>
-    <input
-      type="number"
-      name="ratePerHour"
-      value={formData.ratePerHour}
-      onChange={handleChange}
-      className="w-full p-2 border rounded mt-1"
-      step="0.01"
-      min="0"
-    />
-  </div>
-  
-
-
+              <label className="block text-sm font-bold text-gray-700 uppercase tracking-wider">
+                Base Salary ($)
+              </label>
+              <input
+                type="number"
+                name="baseSalary"
+                value={formData.baseSalary}
+                onChange={handleChange}
+                className="w-full p-2 border rounded mt-1"
+                step="0.01"
+                min="0"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-gray-700 uppercase tracking-wider">
+                Rate Per Hour ($)
+              </label>
+              <input
+                type="number"
+                name="ratePerHour"
+                value={formData.ratePerHour}
+                onChange={handleChange}
+                className="w-full p-2 border rounded mt-1"
+                step="0.01"
+                min="0"
+              />
+            </div>
             <div>
               <label className="block text-sm font-bold text-gray-700 uppercase tracking-wider">
                 Status
@@ -449,21 +443,8 @@ export default function ConsultantDetails() {
                 <option value="Inactive">Inactive</option>
               </select>
             </div>
-            <div>
-              <label className="block text-sm font-bold text-gray-700 uppercase tracking-wider">
-                Country
-              </label>
-              <input
-                type="text"
-                name="country"
-                value={formData.country}
-                onChange={handleChange}
-                className="w-full p-2 border rounded mt-1"
-              />
-            </div>
-          </div>
           
-          <div className="space-y-4">
+
             <div>
               <label className="block text-sm font-bold text-gray-700 uppercase tracking-wider">
                 Phone
@@ -489,37 +470,60 @@ export default function ConsultantDetails() {
               />
             </div>
             <div>
-    <label className="block text-sm font-bold text-gray-700 uppercase tracking-wider">
-      Rate Per Day ($)
-    </label>
-    <input
-      type="number"
-      name="ratePerDay"
-      value={formData.ratePerDay}
-      onChange={handleChange}
-      className="w-full p-2 border rounded mt-1"
-      step="0.01"
-      min="0"
-    />
-  </div>
-  <div>
-  <label className="block text-sm font-bold text-gray-700 uppercase tracking-wider">
-    Base Salary ($)
-  </label>
-  <input
-    type="number"
-    name="baseSalary"
-    value={formData.baseSalary}
-    onChange={handleChange}
-    className="w-full p-2 border rounded mt-1"
-    step="0.01"
-    min="0"
-  />
-</div>
-
-
-
-
+              <label className="block text-sm font-bold text-gray-700 uppercase tracking-wider">
+                Insurance Amount ($)
+              </label>
+              <input
+                type="number"
+                name="insuranceAmount"
+                value={formData.insuranceAmount}
+                onChange={handleChange}
+                className="w-full p-2 border rounded mt-1"
+                step="0.01"
+                min="0"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-gray-700 uppercase tracking-wider">
+                Credit Card Fee (%)
+              </label>
+              <input
+                type="number"
+                name="creditCardFee"
+                value={formData.creditCardFee}
+                onChange={handleChange}
+                className="w-full p-2 border rounded mt-1"
+                step="0.01"
+                min="0"
+                max="100"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-gray-700 uppercase tracking-wider">
+                Rate Per Day ($)
+              </label>
+              <input
+                type="number"
+                name="ratePerDay"
+                value={formData.ratePerDay}
+                onChange={handleChange}
+                className="w-full p-2 border rounded mt-1"
+                step="0.01"
+                min="0"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-gray-700 uppercase tracking-wider">
+                Country
+              </label>
+              <input
+                type="text"
+                name="country"
+                value={formData.country}
+                onChange={handleChange}
+                className="w-full p-2 border rounded mt-1"
+              />
+            </div>
             <div>
               <label className="block text-sm font-bold text-gray-700 uppercase tracking-wider">
                 Address
@@ -531,7 +535,6 @@ export default function ConsultantDetails() {
                 onChange={handleChange}
                 className="w-full p-2 border rounded mt-1"
               />
-            </div>
           </div>
           
           <div className="col-span-2">
@@ -580,7 +583,6 @@ export default function ConsultantDetails() {
         <p>Created: {new Date(consultant.createdAt).toLocaleString()}</p>
         <p>Last Updated: {new Date(consultant.updatedAt).toLocaleString()}</p>
       </div>
-      
     </div>
   );
 }

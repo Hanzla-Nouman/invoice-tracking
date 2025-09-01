@@ -5,6 +5,76 @@ import Customer from "@/models/customer";
 import { NextResponse } from "next/server";
 import { sendInvoiceEmail } from "@/lib/emailService"; // You'll need to create this
 
+export async function DELETE(req, { params }) {
+  try {
+    await dbConnect();
+    const { id } = params;
+
+    if (!id) {
+      return new Response(JSON.stringify({ error: "Missing timesheet ID" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    // Find the timesheet first to get its details for summary update
+    const timesheet = await Timesheet.findById(id);
+    
+    if (!timesheet) {
+      return new Response(JSON.stringify({ error: "Timesheet not found" }), {
+        status: 404,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    // Remove from monthly summaries
+    const monthlySummaries = await MonthlySummary.find({
+      Timesheets: id,
+      monthYear: timesheet.monthYear
+    });
+
+    for (const monthlySummary of monthlySummaries) {
+      // Remove the timesheet from the monthly summary
+      await MonthlySummary.findByIdAndUpdate(
+        monthlySummary._id,
+        {
+          $pull: { Timesheets: id }
+        }
+      );
+      
+      // Recalculate the monthly summary if needed
+      if (timesheet.status === "Approved") {
+        const adminFee = timesheet.contract?.adminFee || 0;
+        const approvedAmount = timesheet.totalAmount * (1 - adminFee / 100);
+        
+        await MonthlySummary.findByIdAndUpdate(
+          monthlySummary._id,
+          {
+            $inc: {
+              totalApprovedAmount: -approvedAmount,
+              remainingBalance: -approvedAmount
+            }
+          }
+        );
+      }
+    }
+
+    // Delete the timesheet
+    await Timesheet.findByIdAndDelete(id);
+
+    return new Response(JSON.stringify({ message: "Timesheet deleted successfully" }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+  } catch (error) {
+    console.error("Error deleting timesheet:", error);
+    return new Response(JSON.stringify({ error: "Internal Server Error" }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+}
+
 export async function PUT(req, { params }) {
   try {
     await dbConnect();

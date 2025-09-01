@@ -4,7 +4,7 @@ import { useEffect, useState, useMemo } from "react";
 import { useSession } from "next-auth/react";
 import toast from "react-hot-toast";
 import { Loader } from "lucide-react";
-import { MdCancel } from "react-icons/md";
+import { MdCancel, MdDelete } from "react-icons/md";
 import { FaEdit, FaSave } from "react-icons/fa";
 
 export default function Timesheet() {
@@ -19,10 +19,21 @@ export default function Timesheet() {
   const [monthlyData, setMonthlyData] = useState([]);
   const [editingPaymentMethodId, setEditingPaymentMethodId] = useState(null);
   const [editingPaymentStatusId, setEditingPaymentStatusId] = useState(null);
+  const [editingSalaryId, setEditingSalaryId] = useState(null);
   const [paymentMethodValue, setPaymentMethodValue] = useState("");
   const [paymentStatusValue, setPaymentStatusValue] = useState("");
+  const [salaryValue, setSalaryValue] = useState("");
   const [monthFilter, setMonthFilter] = useState("");
   const [consultantFilter, setConsultantFilter] = useState("");
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // New state for partial payment modal
+  const [partialPaymentModal, setPartialPaymentModal] = useState(null);
+  const [partialPaymentAmount, setPartialPaymentAmount] = useState("");
+  const [partialPaymentMethod, setPartialPaymentMethod] = useState("Card");
+  const [isProcessingPartial, setIsProcessingPartial] = useState(false);
+  const [paymentHistoryModal, setPaymentHistoryModal] = useState(null);
 
   const role = session?.user?.role;
   const userId = session?.user?.id;
@@ -169,6 +180,16 @@ export default function Timesheet() {
     }
   };
 
+  const toggleSalaryEdit = (month) => {
+    if (editingSalaryId === month._id) {
+      setEditingSalaryId(null);
+      setSalaryValue("");
+    } else {
+      setEditingSalaryId(month._id);
+      setSalaryValue(month.baseSalary || 0);
+    }
+  };
+
   const handlePaymentMethodUpdate = async (month) => {
     const toastId = toast.loading("Updating payment method...");
     try {
@@ -192,24 +213,83 @@ export default function Timesheet() {
     }
   };
 
-  const handlePaymentStatusUpdate = async (month) => {
-    const toastId = toast.loading("Updating payment status...");
+  const handlePaymentStatusUpdate = async (month, isPartial = false, partialData = null) => {
+    const toastId = toast.loading(isPartial ? "Processing partial payment..." : "Updating payment status...");
+    
+    try {
+      let requestBody = {
+        id: month._id,
+        paymentStatus: isPartial ? "Partially Paid" : paymentStatusValue,
+      };
+      
+      // Add partial payment data if this is a partial payment
+      if (isPartial && partialData) {
+        requestBody = {
+          ...requestBody,
+          partialPaymentAmount: parseFloat(partialData.amount),
+          partialPaymentMethod: partialData.method
+        };
+      } else if (!isPartial && paymentStatusValue === "Paid") {
+        // For full payment, set remaining balance to 0
+        requestBody.remainingBalance = 0;
+      }
+      
+      const res = await fetch(`/api/monthly-summaries`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(requestBody),
+      });
+      
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || "Failed to update payment status");
+      }
+      
+      const updatedData = await res.json();
+      
+      setMonthlyData(prev =>
+        prev.map(m => (m._id === month._id ? { 
+          ...m, 
+          paymentStatus: updatedData.paymentStatus,
+          remainingBalance: updatedData.remainingBalance,
+          partialPayments: updatedData.partialPayments || []
+        } : m))
+      );
+      
+      toast.success(isPartial ? "Partial payment processed!" : "Payment status updated!", { id: toastId });
+      setEditingPaymentStatusId(null);
+      setPartialPaymentModal(null);
+      setPartialPaymentAmount("");
+    } catch (error) {
+      toast.error(`Error: ${error.message}`, { id: toastId });
+    }
+  };
+
+  const handleSalaryUpdate = async (month) => {
+    const toastId = toast.loading("Updating salary...");
     try {
       const res = await fetch(`/api/monthly-summaries`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           id: month._id,
-          paymentStatus: paymentStatusValue,
+          baseSalary: parseFloat(salaryValue),
         }),
       });
-      if (!res.ok) throw new Error("Failed to update payment status");
+      
+      if (!res.ok) throw new Error("Failed to update salary");
+      
       const updatedData = await res.json();
       setMonthlyData(prev =>
-        prev.map(m => (m._id === month._id ? { ...m, paymentStatus: updatedData.paymentStatus } : m))
+        prev.map(m => (m._id === month._id ? { 
+          ...m, 
+          baseSalary: updatedData.baseSalary,
+          remainingBalance: updatedData.remainingBalance
+        } : m))
       );
-      toast.success("Payment status updated!", { id: toastId });
-      setEditingPaymentStatusId(null);
+      
+      toast.success("Salary updated!", { id: toastId });
+      setEditingSalaryId(null);
     } catch (error) {
       toast.error(`Error: ${error.message}`, { id: toastId });
     }
@@ -277,6 +357,67 @@ export default function Timesheet() {
       console.error("Error updating timesheet:", error.message);
       toast.error(`Save failed: ${error.message}`, { id: toastId });
     }
+  };
+
+  const handleDelete = async (id) => {
+    setIsDeleting(true);
+    const toastId = toast.loading("Deleting timesheet...");
+    
+    try {
+      const res = await fetch(`/api/timesheets/${id}`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(errorText || `HTTP ${res.status}`);
+      }
+
+      // Remove from local state
+      setTimesheets(timesheets.filter(t => t._id !== id));
+      
+      // Also remove from monthly data if needed
+      setMonthlyData(prev => prev.map(month => ({
+        ...month,
+        Timesheets: month.Timesheets?.filter(t => t._id !== id) || []
+      })));
+      
+      setDeleteConfirm(null);
+      toast.success("Timesheet deleted successfully!", { id: toastId });
+    } catch (error) {
+      console.error("Error deleting timesheet:", error.message);
+      toast.error(`Delete failed: ${error.message}`, { id: toastId });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const openPartialPaymentModal = (month) => {
+    setPartialPaymentModal(month);
+    setPartialPaymentAmount("");
+    setPartialPaymentMethod("Card");
+  };
+
+  const processPartialPayment = async () => {
+    if (!partialPaymentModal || !partialPaymentAmount) return;
+    
+    const amount = parseFloat(partialPaymentAmount);
+    if (isNaN(amount) || amount <= 0) {
+      toast.error("Please enter a valid payment amount");
+      return;
+    }
+    
+    if (amount > partialPaymentModal.remainingBalance) {
+      toast.error("Payment amount cannot exceed remaining balance");
+      return;
+    }
+    
+    setIsProcessingPartial(true);
+    await handlePaymentStatusUpdate(partialPaymentModal, true, {
+      amount: amount,
+      method: partialPaymentMethod
+    });
+    setIsProcessingPartial(false);
   };
 
   if (loading)
@@ -363,6 +504,176 @@ export default function Timesheet() {
         )}
       </div>
 
+      {/* Delete Confirmation Modal */}
+      {deleteConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full">
+            <h3 className="text-lg font-bold mb-4">Confirm Deletion</h3>
+            <p className="mb-6">
+              Are you sure you want to delete this timesheet entry? This action cannot be undone.
+            </p>
+            <div className="flex justify-end space-x-4">
+              <button
+                onClick={() => setDeleteConfirm(null)}
+                className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+                disabled={isDeleting}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleDelete(deleteConfirm)}
+                className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 flex items-center"
+                disabled={isDeleting}
+              >
+                {isDeleting ? (
+                  <>
+                    <Loader className="animate-spin mr-2" size={16} />
+                    Deleting...
+                  </>
+                ) : (
+                  <>
+                    <MdDelete className="mr-2" />
+                    Delete
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Partial Payment Modal */}
+      {partialPaymentModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full">
+            <h3 className="text-lg font-bold mb-4">Process Partial Payment</h3>
+            
+            <div className="mb-4">
+              <p className="mb-2">
+                Consultant: <span className="font-semibold">{partialPaymentModal.consultantName}</span>
+              </p>
+              <p className="mb-2">
+                Month: <span className="font-semibold">{partialPaymentModal.monthYear}</span>
+              </p>
+              <p className="mb-4">
+                Remaining Balance: <span className="font-semibold">€ {partialPaymentModal.remainingBalance?.toFixed(2)}</span>
+              </p>
+            </div>
+            
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-1">Payment Amount</label>
+              <input
+                type="number"
+                step="0.01"
+                min="0.01"
+                max={partialPaymentModal.remainingBalance}
+                value={partialPaymentAmount}
+                onChange={(e) => setPartialPaymentAmount(e.target.value)}
+                className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-300"
+                placeholder="Enter amount"
+              />
+            </div>
+            
+            <div className="mb-6">
+              <label className="block text-sm font-medium mb-1">Payment Method</label>
+              <select
+                value={partialPaymentMethod}
+                onChange={(e) => setPartialPaymentMethod(e.target.value)}
+                className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-300"
+              >
+                <option value="Card">Card</option>
+                <option value="Invoice">Invoice</option>
+                <option value="Cash">Cash</option>
+              </select>
+            </div>
+            
+            <div className="flex justify-end space-x-4">
+              <button
+                onClick={() => {
+                  setPartialPaymentModal(null);
+                  setPartialPaymentAmount("");
+                }}
+                className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+                disabled={isProcessingPartial}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={processPartialPayment}
+                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 flex items-center"
+                disabled={isProcessingPartial || !partialPaymentAmount}
+              >
+                {isProcessingPartial ? (
+                  <>
+                    <Loader className="animate-spin mr-2" size={16} />
+                    Processing...
+                  </>
+                ) : (
+                  "Process Payment"
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Payment History Modal */}
+      {paymentHistoryModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full">
+            <h3 className="text-lg font-bold mb-4">Payment History - {paymentHistoryModal.monthYear}</h3>
+            
+            <div className="mb-4">
+              <p className="mb-2">
+                Consultant: <span className="font-semibold">{paymentHistoryModal.consultantName}</span>
+              </p>
+              <p className="mb-4">
+                Total Paid: <span className="font-semibold">
+                  € {(paymentHistoryModal.totalApprovedAmount - paymentHistoryModal.remainingBalance).toFixed(2)}
+                </span>
+              </p>
+            </div>
+            
+            {paymentHistoryModal.partialPayments && paymentHistoryModal.partialPayments.length > 0 ? (
+              <div className="max-h-64 overflow-y-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-gray-100">
+                      <th className="p-1 text-left">Date</th>
+                      <th className="p-1 text-left">Amount</th>
+                      <th className="p-1 text-left">Method</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {paymentHistoryModal.partialPayments
+                      .sort((a, b) => new Date(b.date) - new Date(a.date))
+                      .map((payment, index) => (
+                        <tr key={index} className="border-b">
+                          <td className="p-1">{new Date(payment.date).toLocaleDateString()}</td>
+                          <td className="p-1">€ {payment.amount.toFixed(2)}</td>
+                          <td className="p-1">{payment.paymentMethod}</td>
+                        </tr>
+                      ))
+                    }
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <p className="text-gray-500 text-center py-4">No payment history found</p>
+            )}
+            
+            <div className="flex justify-end mt-4">
+              <button
+                onClick={() => setPaymentHistoryModal(null)}
+                className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showSummary ? (
         <div className="overflow-x-auto">
           <table className="w-full border-collapse">
@@ -387,7 +698,7 @@ export default function Timesheet() {
             <tbody>
               {monthlyData.length === 0 ? (
                 <tr>
-                  <td colSpan={role === "Admin" ? 11 : 10} className="text-center py-4">
+                  <td colSpan={role === "Admin" ? 12 : 11} className="text-center py-4">
                     No monthly data found
                   </td>
                 </tr>
@@ -417,7 +728,23 @@ export default function Timesheet() {
                       <td className="p-1">€ {month.insuranceAmount?.toFixed(2) || '0.00'}</td>
                       <td className="p-1">€ {month?.expense?.toFixed(2) || '0.00'}</td>
                       <td className="p-1">€ {month?.cardFee?.toFixed(2) || '0.00'}</td>
-                      <td className="p-1">€ {month.baseSalary?.toFixed(2) || '0.00'}</td>
+                      
+                      {/* Salary Column (Editable by Admin) */}
+                      <td className="p-1">
+                        {editingSalaryId === month._id && role === "Admin" ? (
+                          <input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            value={salaryValue}
+                            onChange={(e) => setSalaryValue(e.target.value)}
+                            className="w-20 p-1 border rounded focus:ring-2 focus:ring-blue-300"
+                          />
+                        ) : (
+                          `€ ${month.baseSalary?.toFixed(2) || '0.00'}`
+                        )}
+                      </td>
+                      
                       <td className="p-1">€ {month.totalApprovedAmount?.toFixed(2) || '0.00'}</td>
                       <td className="p-1">€ {month.remainingBalance?.toFixed(2) || '0.00'}</td>
                       
@@ -448,6 +775,7 @@ export default function Timesheet() {
                             className="p-1 border rounded focus:ring-2 focus:ring-blue-300"
                           >
                             <option value="Pending">Pending</option>
+                            <option value="Partially Paid">Partially Paid</option>
                             <option value="Paid">Paid</option>
                           </select>
                         ) : (
@@ -461,69 +789,133 @@ export default function Timesheet() {
                             }`}
                           >
                             {month.paymentStatus}
+                            {month.paymentStatus === "Partially Paid" && month.partialPayments && (
+                              <span className="ml-1 text-xs">({month.partialPayments.length} payments)</span>
+                            )}
                           </span>
                         )}
                       </td>
                       
                       {/* Action Buttons */}
                       <td className="p-1">
-                        {/* Consultant Payment Method Actions */}
-                        {role === "Consultant" && (
-                          <div className="flex space-x-2">
-                            {editingPaymentMethodId === month._id ? (
-                              <>
+                        <div className="flex flex-col space-y-2">
+                          {/* Admin Salary Actions */}
+                          {role === "Admin" && (
+                            <div className="flex space-x-2">
+                              {editingSalaryId === month._id ? (
+                                <>
+                                  <button
+                                    onClick={() => handleSalaryUpdate(month)}
+                                    className="p-1 bg-green-500 text-white rounded hover:bg-green-600"
+                                  >
+                                    <FaSave size={16} />
+                                  </button>
+                                  <button
+                                    onClick={() => toggleSalaryEdit(month)}
+                                    className="p-1 bg-gray-500 text-white rounded hover:bg-gray-600"
+                                  >
+                                    <MdCancel size={16} />
+                                  </button>
+                                </>
+                              ) : (
                                 <button
-                                  onClick={() => handlePaymentMethodUpdate(month)}
-                                  className="p-1 bg-green-500 text-white rounded hover:bg-green-600"
+                                  onClick={() => toggleSalaryEdit(month)}
+                                  className="p-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+                                  title="Edit Salary"
                                 >
-                                  <FaSave size={16} />
+                                  <FaEdit size={16} />
                                 </button>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Consultant Payment Method Actions */}
+                          {role === "Consultant" && (
+                            <div className="flex space-x-2">
+                              {editingPaymentMethodId === month._id ? (
+                                <>
+                                  <button
+                                    onClick={() => handlePaymentMethodUpdate(month)}
+                                    className="p-1 bg-green-500 text-white rounded hover:bg-green-600"
+                                  >
+                                    <FaSave size={16} />
+                                  </button>
+                                  <button
+                                    onClick={() => togglePaymentMethodEdit(month)}
+                                    className="p-1 bg-gray-500 text-white rounded hover:bg-gray-600"
+                                  >
+                                    <MdCancel size={16} />
+                                  </button>
+                                </>
+                              ) : (
                                 <button
                                   onClick={() => togglePaymentMethodEdit(month)}
-                                  className="p-1 bg-gray-500 text-white rounded hover:bg-gray-600"
+                                  className="p-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+                                  title="Edit Payment Method"
                                 >
-                                  <MdCancel size={16} />
+                                  <FaEdit size={16} />
                                 </button>
-                              </>
-                            ) : (
-                              <button
-                                onClick={() => togglePaymentMethodEdit(month)}
-                                className="p-1 bg-blue-500 text-white rounded hover:bg-blue-600"
-                              >
-                                <FaEdit size={16} />
-                              </button>
-                            )}
-                          </div>
-                        )}
+                              )}
+                            </div>
+                          )}
 
-                        {/* Admin Payment Status Actions */}
-                        {role === "Admin" && (
-                          <div className="flex space-x-2">
-                            {editingPaymentStatusId === month._id ? (
-                              <>
+                          {/* Admin Payment Status Actions */}
+                          {role === "Admin" && (
+                            <div className="flex flex-col space-y-2">
+                              {editingPaymentStatusId === month._id ? (
+                                <div className="flex space-x-2">
+                                  {paymentStatusValue === "Partially Paid" ? (
+                                    <button
+                                      onClick={() => openPartialPaymentModal(month)}
+                                      className="p-1 bg-purple-500 text-white rounded hover:bg-purple-600"
+                                      title="Process Partial Payment"
+                                    >
+                                      💰
+                                    </button>
+                                  ) : (
+                                    <button
+                                      onClick={() => handlePaymentStatusUpdate(month)}
+                                      className="p-1 bg-green-500 text-white rounded hover:bg-green-600"
+                                    >
+                                      <FaSave size={16} />
+                                    </button>
+                                  )}
+                                  <button
+                                    onClick={() => {
+                                      setEditingPaymentStatusId(null);
+                                      setPaymentStatusValue("");
+                                    }}
+                                    className="p-1 bg-gray-500 text-white rounded hover:bg-gray-600"
+                                  >
+                                    <MdCancel size={16} />
+                                  </button>
+                                </div>
+                              ) : (
                                 <button
-                                  onClick={() => handlePaymentStatusUpdate(month)}
-                                  className="p-1 bg-green-500 text-white rounded hover:bg-green-600"
+                                  onClick={() => {
+                                    setEditingPaymentStatusId(month._id);
+                                    setPaymentStatusValue(month.paymentStatus || "Pending");
+                                  }}
+                                  className="p-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+                                  title="Edit Payment Status"
                                 >
-                                  <FaSave size={16} />
+                                  <FaEdit size={16} />
                                 </button>
+                              )}
+                              
+                              {/* View Payment History Button */}
+                              {month.partialPayments && month.partialPayments.length > 0 && (
                                 <button
-                                  onClick={() => togglePaymentStatusEdit(month)}
-                                  className="p-1 bg-gray-500 text-white rounded hover:bg-gray-600"
+                                  onClick={() => setPaymentHistoryModal(month)}
+                                  className="p-1 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 text-xs"
+                                  title="View Payment History"
                                 >
-                                  <MdCancel size={16} />
+                                  History
                                 </button>
-                              </>
-                            ) : (
-                              <button
-                                onClick={() => togglePaymentStatusEdit(month)}
-                                className="p-1 bg-blue-500 text-white rounded hover:bg-blue-600"
-                              >
-                                <FaEdit size={16} />
-                              </button>
-                            )}
-                          </div>
-                        )}
+                              )}
+                            </div>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   );
@@ -738,23 +1130,37 @@ export default function Timesheet() {
                                     ? "bg-green-500 hover:bg-green-600"
                                     : "bg-gray-300 cursor-not-allowed"
                                 }`}
+                                title="Save Changes"
                               >
                                 <FaSave size={20} />
                               </button>
                               <button
                                 onClick={() => toggleEdit(t._id)}
                                 className="p-1 bg-gray-500 text-white rounded hover:bg-gray-600"
+                                title="Cancel Editing"
                               >
                                 <MdCancel size={20} />
                               </button>
                             </>
                           ) : (
-                            <button
-                              onClick={() => toggleEdit(t._id)}
-                              className="p-1 bg-blue-500 text-white rounded hover:bg-blue-600"
-                            >
-                              <FaEdit size={20} />
-                            </button>
+                            <>
+                              <button
+                                onClick={() => toggleEdit(t._id)}
+                                className="p-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+                                title="Edit Timesheet"
+                              >
+                                <FaEdit size={20} />
+                              </button>
+                              {role === "Admin" && (
+                                <button
+                                  onClick={() => setDeleteConfirm(t._id)}
+                                  className="p-1 bg-red-500 text-white rounded hover:bg-red-600"
+                                  title="Delete Timesheet"
+                                >
+                                  <MdDelete size={20} />
+                                </button>
+                              )}
+                            </>
                           )}
                         </div>
                       </td>

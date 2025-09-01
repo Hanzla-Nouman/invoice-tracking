@@ -10,22 +10,61 @@ export default function Consultants() {
   const [error, setError] = useState("");
   const router = useRouter();
 
-  useEffect(() => {
-    fetch("/api/consultants")
-      .then((res) => {
-        if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
-        return res.json();
-      })
-      .then((data) => {
-        setConsultants(data.reverse());
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error("Error fetching consultants:", err);
-        setError("Failed to load consultants.");
-        setLoading(false);
-      });
-  }, []);
+useEffect(() => {
+  const fetchData = async () => {
+    try {
+      const consultantsRes = await fetch("/api/consultants");
+      if (!consultantsRes.ok) throw new Error(`HTTP error! Status: ${consultantsRes.status}`);
+      const consultantsData = await consultantsRes.json();
+      console.log("📌 Consultants fetched:", consultantsData);
+
+      const now = new Date();
+      const currentMonthYear = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+      console.log("📌 Current Month-Year being used:", currentMonthYear);
+
+      const consultantsWithBalance = await Promise.all(
+        consultantsData.map(async (consultant) => {
+          try {
+            const summaryRes = await fetch(
+              `/api/monthly-summaries?consultantId=${consultant._id}&monthYear=${currentMonthYear}`
+            );
+            console.log(`📌 Fetching summary for consultant ${consultant._id}:`, summaryRes.status);
+
+            if (summaryRes.ok) {
+              const summaryData = await summaryRes.json();
+              console.log(`✅ Summary data for ${consultant._id}:`, summaryData);
+
+              if (Array.isArray(summaryData) && summaryData.length > 0) {
+                return {
+                  ...consultant,
+                  remainingBalance: summaryData[0]?.remainingBalance ?? 0
+                };
+              }
+            }
+
+            console.warn(`⚠️ No summary found for consultant ${consultant._id}`);
+            return { ...consultant, remainingBalance: 0 };
+
+          } catch (err) {
+            console.error(`❌ Error fetching summary for consultant ${consultant._id}:`, err);
+            return { ...consultant, remainingBalance: 0 };
+          }
+        })
+      );
+
+      setConsultants(consultantsWithBalance.reverse());
+      setLoading(false);
+
+    } catch (err) {
+      console.error("❌ Error fetching consultants:", err);
+      setError("Failed to load consultants.");
+      setLoading(false);
+    }
+  };
+
+  fetchData();
+}, []);
+
 
   const handleRowClick = (id) => {
     router.push(`/consultants/${id}`);
@@ -49,6 +88,7 @@ export default function Consultants() {
             <th className="border border-gray-300 p-2">Email</th>
             <th className="border border-gray-300 p-2">Status</th>
             <th className="border border-gray-300 p-2">Added On</th>
+            <th className="border border-gray-300 p-2">Remaining Balance</th>
           </tr>
         </thead>
         <tbody>
@@ -64,6 +104,7 @@ export default function Consultants() {
                 {consultant.status}
               </td>
               <td className="p-2 border">{new Date(consultant.createdAt).toLocaleDateString()}</td>
+              <td className="p-2 border">${consultant.remainingBalance.toFixed(2)}</td>
             </tr>
           ))}
         </tbody>
